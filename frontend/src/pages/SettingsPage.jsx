@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
+import { useAuth } from '../context/AuthContext';
 
 export default function SettingsPage() {
+  const { user, logout } = useAuth();
   const [profile, setProfile] = useState({
-    name: 'Utkarsh',
-    email: 'utkarsh@socialiq.app',
+    name: user?.name || 'Utkarsh',
+    email: user?.email || 'utkarsh@socialiq.app',
   });
   const [saveStatus, setSaveStatus] = useState('');
 
@@ -12,6 +14,8 @@ export default function SettingsPage() {
     setSaveStatus('Profile updated successfully.');
     setTimeout(() => setSaveStatus(''), 2500);
   };
+
+  const initial = (profile.name || 'U').charAt(0).toUpperCase();
 
   return (
     <main className="flex-1 px-6 py-6 max-w-3xl w-full mx-auto flex flex-col gap-6">
@@ -29,7 +33,7 @@ export default function SettingsPage() {
 
         <div className="flex items-center gap-4">
           <div className="w-14 h-14 rounded-full bg-primary-container text-on-primary-container font-title text-headline-md flex items-center justify-center border border-primary/30 shadow-sm">
-            U
+            {initial}
           </div>
           <button
             type="button"
@@ -83,11 +87,22 @@ export default function SettingsPage() {
       <section className="bg-surface border border-outline-variant rounded-lg p-6 flex items-center justify-between gap-4">
         <div>
           <h2 className="font-title text-headline-md text-on-surface">Account</h2>
-          <p className="font-body text-body-sm text-text-secondary mt-0.5">Workspace ID: ws_socialiq_7f82</p>
+          <p className="font-body text-body-sm text-text-secondary mt-0.5">
+            User ID: <span className="font-mono text-xs">{user?._id || 'local_user'}</span>
+          </p>
         </div>
-        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded bg-primary-container text-on-primary-container border border-primary/20 font-label text-label-md">
-          Creator Pro
-        </span>
+        <div className="flex items-center gap-3">
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded bg-primary-container text-on-primary-container border border-primary/20 font-label text-label-md">
+            Creator Pro
+          </span>
+          <button
+            type="button"
+            onClick={logout}
+            className="px-3 py-1 rounded bg-surface-elevated border border-outline text-error hover:bg-error-container/30 font-label text-label-md"
+          >
+            Sign Out
+          </button>
+        </div>
       </section>
 
       {/* Appearance Section */}

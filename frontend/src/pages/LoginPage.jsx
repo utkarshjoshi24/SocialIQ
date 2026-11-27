@@ -1,21 +1,35 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('utkarsh@socialiq.app');
-  const [password, setPassword] = useState('••••••••');
+  const [password, setPassword] = useState('password123');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
+  const { login } = useAuth();
   const navigate = useNavigate();
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
-    navigate('/dashboard');
+    setErrorMessage('');
+    setIsSubmitting(true);
+
+    try {
+      await login(email, password);
+      navigate('/dashboard');
+    } catch (err) {
+      setErrorMessage(err.message || 'Invalid email or password');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
     <div className="min-h-screen grid grid-cols-1 lg:grid-cols-2 bg-background text-on-background font-body antialiased">
       {/* Left Branding Showcase (Desktop) */}
       <div className="hidden lg:flex flex-col justify-between p-12 bg-background-secondary border-r border-outline-variant relative overflow-hidden auth-grid">
-        <Link to="/dashboard" className="flex items-center gap-2.5 z-10">
+        <Link to="/" className="flex items-center gap-2.5 z-10">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
             <rect x="3" y="12" width="5" height="9" rx="1.5" fill="#22D3EE" />
             <rect x="10" y="7" width="5" height="14" rx="1.5" fill="#A78BFA" />
@@ -49,6 +63,14 @@ export default function LoginPage() {
             <h1 className="font-headline text-headline-lg text-on-surface">Sign in to SocialIQ</h1>
             <p className="font-body text-body-sm text-text-secondary">Enter your workspace credentials to continue.</p>
           </div>
+
+          {/* Error Banner */}
+          {errorMessage && (
+            <div className="p-3 rounded bg-error-container border border-error/20 text-on-error-container font-body text-body-sm flex items-center gap-2">
+              <span className="material-symbols-outlined text-[18px]">error</span>
+              <span>{errorMessage}</span>
+            </div>
+          )}
 
           <form onSubmit={handleLogin} className="flex flex-col gap-4">
             <label className="flex flex-col gap-1.5">
@@ -91,9 +113,10 @@ export default function LoginPage() {
 
             <button
               type="submit"
-              className="mt-2 w-full py-2.5 rounded bg-primary text-on-primary font-label text-title-sm font-medium hover:opacity-95 shadow-sm transition-opacity"
+              disabled={isSubmitting}
+              className="mt-2 w-full py-2.5 rounded bg-primary text-on-primary font-label text-title-sm font-medium hover:opacity-95 shadow-sm transition-opacity disabled:opacity-50"
             >
-              Sign In
+              {isSubmitting ? 'Signing in...' : 'Sign In'}
             </button>
           </form>
 

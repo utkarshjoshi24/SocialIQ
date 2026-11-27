@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { NavLink, Outlet, useLocation } from 'react-router-dom';
+import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 const navItems = [
   { name: 'Overview', path: '/dashboard', icon: 'grid_view' },
@@ -14,9 +15,16 @@ const navItems = [
 export default function AppLayout() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
+  const { user, logout } = useAuth();
 
-  // Find page title for mobile or breadcrumb if needed
-  const currentNav = navItems.find((item) => item.path === location.pathname);
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
+
+  const displayName = user?.name || 'Utkarsh';
+  const displayInitial = displayName.charAt(0).toUpperCase();
 
   return (
     <div className="min-h-screen flex bg-background text-on-background font-body antialiased">
@@ -54,7 +62,7 @@ export default function AppLayout() {
           </nav>
         </div>
 
-        {/* Bottom Profile & Settings */}
+        {/* Bottom Profile & Settings & Logout */}
         <div className="p-4 border-t border-outline-variant flex flex-col gap-2">
           <NavLink
             to="/settings"
@@ -72,15 +80,28 @@ export default function AppLayout() {
 
           <NavLink
             to="/settings"
-            className="flex items-center gap-2.5 px-2.5 py-2 rounded-md bg-surface border border-outline-variant hover:border-outline transition-colors duration-state-change"
+            className="flex items-center justify-between px-2.5 py-2 rounded-md bg-surface border border-outline-variant hover:border-outline transition-colors duration-state-change"
           >
-            <span className="w-7 h-7 rounded-full bg-primary-container text-on-primary-container font-title text-label-md flex items-center justify-center shrink-0">
-              U
-            </span>
-            <div className="min-w-0">
-              <p className="font-title text-body-sm text-on-surface truncate">Utkarsh</p>
-              <p className="font-mono text-mono-sm text-text-muted truncate">Creator Pro</p>
+            <div className="flex items-center gap-2.5 min-w-0">
+              <span className="w-7 h-7 rounded-full bg-primary-container text-on-primary-container font-title text-label-md flex items-center justify-center shrink-0">
+                {displayInitial}
+              </span>
+              <div className="min-w-0">
+                <p className="font-title text-body-sm text-on-surface truncate">{displayName}</p>
+                <p className="font-mono text-mono-sm text-text-muted truncate">Creator Pro</p>
+              </div>
             </div>
+            <button
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                handleLogout();
+              }}
+              title="Sign out"
+              className="text-text-muted hover:text-error p-1 rounded transition-colors"
+            >
+              <span className="material-symbols-outlined text-[16px]">logout</span>
+            </button>
           </NavLink>
         </div>
       </aside>
@@ -152,6 +173,17 @@ export default function AppLayout() {
             <span className="material-symbols-outlined text-[18px]">settings</span>
             <span>Settings</span>
           </NavLink>
+          <button
+            type="button"
+            onClick={() => {
+              setMobileMenuOpen(false);
+              handleLogout();
+            }}
+            className="flex items-center gap-2.5 px-3 py-1.5 rounded text-error hover:bg-error-container/30 font-body text-body-md text-left"
+          >
+            <span className="material-symbols-outlined text-[18px]">logout</span>
+            <span>Log Out</span>
+          </button>
         </div>
       </div>
 
@@ -171,7 +203,7 @@ export default function AppLayout() {
             <div className="flex items-center gap-2">
               <span className="font-mono text-mono-sm text-text-muted">Workspace</span>
               <span className="text-text-muted">/</span>
-              <span className="font-title text-body-sm text-on-surface">Utkarsh Studio</span>
+              <span className="font-title text-body-sm text-on-surface">{displayName} Studio</span>
             </div>
           </div>
 
@@ -206,7 +238,7 @@ export default function AppLayout() {
               aria-label="Profile settings"
               className="w-8 h-8 rounded-full bg-surface-elevated border border-outline flex items-center justify-center font-title text-label-md text-on-surface hover:border-primary/40 transition-colors"
             >
-              U
+              {displayInitial}
             </NavLink>
           </div>
         </header>

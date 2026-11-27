@@ -1,22 +1,36 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 export default function RegisterPage() {
   const [fullName, setFullName] = useState('Utkarsh');
-  const [email, setEmail] = useState('utkarsh@socialiq.app');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
+  const { register } = useAuth();
   const navigate = useNavigate();
 
-  const handleRegister = (e) => {
+  const handleRegister = async (e) => {
     e.preventDefault();
-    navigate('/dashboard');
+    setErrorMessage('');
+    setIsSubmitting(true);
+
+    try {
+      await register(fullName, email, password);
+      navigate('/dashboard');
+    } catch (err) {
+      setErrorMessage(err.message || 'Registration failed');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
     <div className="min-h-screen grid grid-cols-1 lg:grid-cols-2 bg-background text-on-background font-body antialiased">
       {/* Left Branding Showcase (Desktop) */}
       <div className="hidden lg:flex flex-col justify-between p-12 bg-background-secondary border-r border-outline-variant relative overflow-hidden auth-grid-violet">
-        <Link to="/dashboard" className="flex items-center gap-2.5 z-10">
+        <Link to="/" className="flex items-center gap-2.5 z-10">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
             <rect x="3" y="12" width="5" height="9" rx="1.5" fill="#22D3EE" />
             <rect x="10" y="7" width="5" height="14" rx="1.5" fill="#A78BFA" />
@@ -53,6 +67,14 @@ export default function RegisterPage() {
             </p>
           </div>
 
+          {/* Error Banner */}
+          {errorMessage && (
+            <div className="p-3 rounded bg-error-container border border-error/20 text-on-error-container font-body text-body-sm flex items-center gap-2">
+              <span className="material-symbols-outlined text-[18px]">error</span>
+              <span>{errorMessage}</span>
+            </div>
+          )}
+
           <form onSubmit={handleRegister} className="flex flex-col gap-4">
             <label className="flex flex-col gap-1.5">
               <span className="font-label text-label-md text-text-secondary">Full Name</span>
@@ -83,18 +105,20 @@ export default function RegisterPage() {
               <input
                 type="password"
                 required
+                minLength={6}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="Minimum 8 characters"
+                placeholder="Minimum 6 characters"
                 className="rounded bg-surface-elevated border border-outline px-3 py-2.5 font-body text-body-md text-on-surface placeholder:text-text-muted focus:border-primary focus:outline-none"
               />
             </label>
 
             <button
               type="submit"
-              className="mt-2 w-full py-2.5 rounded bg-primary text-on-primary font-label text-title-sm font-medium hover:opacity-95 shadow-sm transition-opacity"
+              disabled={isSubmitting}
+              className="mt-2 w-full py-2.5 rounded bg-primary text-on-primary font-label text-title-sm font-medium hover:opacity-95 shadow-sm transition-opacity disabled:opacity-50"
             >
-              Create Account
+              {isSubmitting ? 'Creating Workspace...' : 'Create Account'}
             </button>
           </form>
 

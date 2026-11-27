@@ -3,6 +3,7 @@ SocialIQ Analytics & Preprocessing Module
 Handles data ingestion, validation, cleaning, and feature engineering.
 """
 
+from typing import Union, List, Dict, Tuple
 import pandas as pd
 import numpy as np
 
@@ -24,7 +25,44 @@ REQUIRED_COLUMNS = [
     'reach',
 ]
 
-def validate_schema(df: pd.DataFrame) -> tuple[bool, list[str]]:
+def load_data(source: Union[str, List[Dict], pd.DataFrame]) -> pd.DataFrame:
+    """
+    Loads data from a file path (CSV), list of dictionaries (JSON/MongoDB),
+    or an existing DataFrame into a normalized pandas DataFrame.
+    """
+    if isinstance(source, pd.DataFrame):
+        df = source.copy()
+    elif isinstance(source, list):
+        if len(source) == 0:
+            return pd.DataFrame(columns=REQUIRED_COLUMNS + ['engagement_total', 'engagement_rate', 'day_of_week'])
+        df = pd.DataFrame(source)
+    elif isinstance(source, str):
+        df = pd.read_csv(source)
+    else:
+        raise ValueError(f"Unsupported data source type: {type(source)}")
+
+    # Normalize column names: lowercase, strip, replace hyphens/spaces with underscores
+    df.columns = [str(c).lower().strip().replace('-', '_').replace(' ', '_') for c in df.columns]
+
+    # Handle camelCase mappings from MongoDB if present
+    rename_map = {
+        'postid': 'post_id',
+        'contenttype': 'content_type',
+        'captionlength': 'caption_length',
+        'hashtagscount': 'hashtags_count',
+        'durationseconds': 'duration_seconds',
+        'postinghour': 'posting_hour',
+        'engagementrate': 'engagement_rate',
+        'published_at': 'date',
+        'createdat': 'date'
+    }
+    for old_col, new_col in rename_map.items():
+        if old_col in df.columns and new_col not in df.columns:
+            df.rename(columns={old_col: new_col}, inplace=True)
+
+    return df
+
+def validate_schema(df: pd.DataFrame) -> Tuple[bool, List[str]]:
     """
     Validate that dataframe conforms to SocialIQ required columns.
     Returns (is_valid, missing_columns).
@@ -36,12 +74,16 @@ def clean_dataset(df: pd.DataFrame) -> pd.DataFrame:
     """
     Cleans raw dataset, drops invalid duplicates, and fills null values.
     """
+    if df.empty:
+        return df
+
     df = df.copy()
-    
-    # Drop rows with null post_id or date
-    df = df.dropna(subset=['post_id', 'date'])
-    df = df.drop_duplicates(subset=['post_id'])
-    
+
+    # Drop rows without post_id or date if present
+    if 'post_id' in df.columns:
+        df = df.dropna(subset=['post_id'])
+        df = df.drop_duplicates(subset=['post_id'])
+
     # Numeric columns to sanitize
     numeric_cols = [
         'caption_length', 'hashtags_count', 'duration_seconds',
@@ -49,34 +91,60 @@ def clean_dataset(df: pd.DataFrame) -> pd.DataFrame:
     ]
     for col in numeric_cols:
         if col in df.columns:
-            df[col] = pd.to_numeric(df[col], errors='coerce').fillna(0).astype(int)
+            df[col] = pd.to_numeric(df[col], errors='coerce').fillna(0).clip(lower=0).astype(int)
+        else:
+            df[col] = 0
+
+    # Ensure posting_hour is clamped between 0 and 23
+    df['posting_hour'] = df['posting_hour'].clip(lower=0, upper=23)
 
     # String normalization
     for col in ['platform', 'content_type', 'category']:
         if col in df.columns:
             df[col] = df[col].astype(str).str.strip()
-            
+        else:
+            df[col] = 'Unknown'
+
     return df
 
 def engineer_features(df: pd.DataFrame) -> pd.DataFrame:
     """
     Derives engagement metrics and date-derived attributes.
     """
+    if df.empty:
+        return df
+
     df = df.copy()
-    
-    # Engagement Total
+
+    # Calculate Engagement Total = likes + comments + shares + saves
     df['engagement_total'] = df['likes'] + df['comments'] + df['shares'] + df['saves']
-    
-    # Engagement Rate (% based on reach, fallback to views)
-    base_reach = np.where(df['reach'] > 0, df['reach'], df['views'])
+
+    # Calculate Engagement Rate = (engagement_total / reach) * 100 when reach > 0
+    reach_series = pd.to_numeric(df['reach'], errors='coerce').fillna(0)
     df['engagement_rate'] = np.where(
-        base_reach > 0,
-        np.round((df['engagement_total'] / base_reach) * 100, 2),
+        reach_series > 0,
+        np.round((df['engagement_total'] / reach_series) * 100, 2),
         0.0
     )
-    
+
     # Date parsing & day of week
-    df['date'] = pd.to_datetime(df['date'], errors='coerce')
-    df['day_of_week'] = df['date'].dt.day_name()
-    
+    if 'date' in df.columns:
+        parsed_dates = pd.to_datetime(df['date'], errors='coerce')
+        # If any dates failed to parse, fill with today
+        now = pd.Timestamp.now()
+        parsed_dates = parsed_dates.fillna(now)
+        df['date'] = parsed_dates
+        df['day_of_week'] = parsed_dates.dt.day_name()
+    else:
+        df['day_of_week'] = 'Monday'
+
+    return df
+
+def prepare_dataset(source: Union[str, List[Dict], pd.DataFrame]) -> pd.DataFrame:
+    """
+    Full pipeline: load -> clean -> engineer features.
+    """
+    df = load_data(source)
+    df = clean_dataset(df)
+    df = engineer_features(df)
     return df

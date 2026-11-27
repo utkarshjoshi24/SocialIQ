@@ -1,5 +1,7 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { AuthProvider } from './context/AuthContext';
+import ProtectedRoute from './components/ProtectedRoute';
 import AppLayout from './layouts/AppLayout';
 import DashboardPage from './pages/DashboardPage';
 import PostsPage from './pages/PostsPage';
@@ -14,28 +16,32 @@ import RegisterPage from './pages/RegisterPage';
 
 export default function App() {
   return (
-    <BrowserRouter>
-      <Routes>
-        {/* Auth routes (standalone split-screen layout) */}
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/register" element={<RegisterPage />} />
+    <AuthProvider>
+      <BrowserRouter>
+        <Routes>
+          {/* Public Auth routes */}
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
 
-        {/* Protected Application Routes (shared persistent layout) */}
-        <Route element={<AppLayout />}>
-          <Route path="/" element={<Navigate to="/dashboard" replace />} />
-          <Route path="/dashboard" element={<DashboardPage />} />
-          <Route path="/posts" element={<PostsPage />} />
-          <Route path="/analytics" element={<AnalyticsPage />} />
-          <Route path="/insights" element={<InsightsPage />} />
-          <Route path="/prediction" element={<PredictionPage />} />
-          <Route path="/compare" element={<ComparePage />} />
-          <Route path="/upload" element={<UploadPage />} />
-          <Route path="/settings" element={<SettingsPage />} />
-        </Route>
+          {/* Protected Application Routes */}
+          <Route element={<ProtectedRoute />}>
+            <Route element={<AppLayout />}>
+              <Route path="/" element={<Navigate to="/dashboard" replace />} />
+              <Route path="/dashboard" element={<DashboardPage />} />
+              <Route path="/posts" element={<PostsPage />} />
+              <Route path="/analytics" element={<AnalyticsPage />} />
+              <Route path="/insights" element={<InsightsPage />} />
+              <Route path="/prediction" element={<PredictionPage />} />
+              <Route path="/compare" element={<ComparePage />} />
+              <Route path="/upload" element={<UploadPage />} />
+              <Route path="/settings" element={<SettingsPage />} />
+            </Route>
+          </Route>
 
-        {/* Fallback route */}
-        <Route path="*" element={<Navigate to="/dashboard" replace />} />
-      </Routes>
-    </BrowserRouter>
+          {/* Fallback route */}
+          <Route path="*" element={<Navigate to="/dashboard" replace />} />
+        </Routes>
+      </BrowserRouter>
+    </AuthProvider>
   );
 }
