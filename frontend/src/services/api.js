@@ -104,6 +104,24 @@ export const postService = {
   },
 };
 
+// Analytics Services
+export const analyticsService = {
+  getAnalytics: async (params = {}) => {
+    const query = new URLSearchParams();
+    if (params.platform && params.platform !== 'All') query.append('platform', params.platform);
+    if (params.contentType && params.contentType !== 'All') query.append('contentType', params.contentType);
+    if (params.category && params.category !== 'All') query.append('category', params.category);
+    if (params.startDate) query.append('startDate', params.startDate);
+    if (params.endDate) query.append('endDate', params.endDate);
+
+    const qs = query.toString() ? `?${query.toString()}` : '';
+    const res = await fetch(`${API_BASE}/analytics${qs}`, {
+      headers: getAuthHeaders(),
+    });
+    return handleResponse(res);
+  },
+};
+
 // CSV Upload Services
 export const uploadService = {
   uploadCSV: async (file) => {
