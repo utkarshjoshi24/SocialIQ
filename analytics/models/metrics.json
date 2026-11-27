@@ -1,0 +1,143 @@
+{
+  "model": "DecisionTreeClassifier",
+  "features": [
+    "platform",
+    "content_type",
+    "category",
+    "day_of_week",
+    "caption_length",
+    "hashtags_count",
+    "duration_seconds",
+    "posting_hour"
+  ],
+  "target": "performance_class",
+  "random_state": 42,
+  "test_size": 0.2,
+  "thresholds": {
+    "q_low": 5.6434,
+    "q_high": 7.8868,
+    "method": "percentile-based (33rd / 66th) on training engagement_rate",
+    "class_definitions": {
+      "Low": "engagement_rate < 5.6434",
+      "Medium": "5.6434 <= engagement_rate < 7.8868",
+      "High": "engagement_rate >= 7.8868"
+    }
+  },
+  "evaluation": {
+    "accuracy": 0.5,
+    "precision_macro": 0.4889,
+    "recall_macro": 0.4908,
+    "f1_macro": 0.489,
+    "confusion_matrix": {
+      "labels": [
+        "Low",
+        "Medium",
+        "High"
+      ],
+      "matrix": [
+        [
+          25,
+          11,
+          2
+        ],
+        [
+          13,
+          9,
+          10
+        ],
+        [
+          4,
+          10,
+          16
+        ]
+      ]
+    },
+    "per_class": {
+      "Low": {
+        "precision": 0.5952,
+        "recall": 0.6579,
+        "f1": 0.625,
+        "support": 38
+      },
+      "Medium": {
+        "precision": 0.3,
+        "recall": 0.2812,
+        "f1": 0.2903,
+        "support": 32
+      },
+      "High": {
+        "precision": 0.5714,
+        "recall": 0.5333,
+        "f1": 0.5517,
+        "support": 30
+      }
+    }
+  },
+  "feature_importances": {
+    "content_type_Reel": 0.2176,
+    "caption_length": 0.2098,
+    "duration_seconds": 0.1242,
+    "posting_hour": 0.1198,
+    "content_type_Carousel": 0.1072,
+    "content_type_Video": 0.0578,
+    "hashtags_count": 0.0403,
+    "content_type_Image": 0.0282,
+    "day_of_week_Tuesday": 0.0272,
+    "category_Lifestyle": 0.0264,
+    "platform_Instagram": 0.0153,
+    "category_Travel": 0.008,
+    "day_of_week_Thursday": 0.0067,
+    "day_of_week_Friday": 0.006,
+    "platform_YouTube": 0.0055,
+    "platform_LinkedIn": 0.0,
+    "platform_Twitter": 0.0,
+    "content_type_Text": 0.0,
+    "category_Community": 0.0,
+    "category_Education": 0.0,
+    "category_Finance": 0.0,
+    "category_Health": 0.0,
+    "category_Tech": 0.0,
+    "day_of_week_Monday": 0.0,
+    "day_of_week_Saturday": 0.0,
+    "day_of_week_Sunday": 0.0,
+    "day_of_week_Wednesday": 0.0
+  },
+  "overfitting_check": {
+    "train_accuracy": 0.755,
+    "test_accuracy": 0.5,
+    "overfit_gap": 0.255,
+    "overfitting_flag": true,
+    "note": "Train-test accuracy gap > 10%: possible overfitting. Consider reducing max_depth or increasing min_samples_leaf."
+  },
+  "quality_checks": {
+    "missing_values": {
+      "platform": 0,
+      "content_type": 0,
+      "category": 0,
+      "day_of_week": 0,
+      "caption_length": 0,
+      "hashtags_count": 0,
+      "duration_seconds": 0,
+      "posting_hour": 0
+    },
+    "duplicate_records": 0,
+    "data_leakage_detected": [],
+    "class_distribution": {
+      "train": {
+        "High": 136,
+        "Medium": 132,
+        "Low": 132
+      },
+      "test": {
+        "Low": 38,
+        "Medium": 32,
+        "High": 30
+      }
+    },
+    "total_records": 500,
+    "dataset_size_warning": null
+  },
+  "limitations": [
+    "Train-test accuracy gap of 25.50% suggests overfitting."
+  ]
+}

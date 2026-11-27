@@ -1,0 +1,10 @@
+{
+  "q_low": 5.6434,
+  "q_high": 7.8868,
+  "method": "percentile-based (33rd / 66th) on training engagement_rate",
+  "class_definitions": {
+    "Low": "engagement_rate < 5.6434",
+    "Medium": "5.6434 <= engagement_rate < 7.8868",
+    "High": "engagement_rate >= 7.8868"
+  }
+}
