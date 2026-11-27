@@ -1,0 +1,314 @@
+<!DOCTYPE html><html lang="en"><head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SocialIQ — Import Data</title>
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <script id="tailwind-config">/** @type {import('tailwindcss').Config} */
+globalThis.tailwind = globalThis.tailwind || {};
+globalThis.tailwind.config = {
+  darkMode: 'class',
+  theme: {
+    extend: {
+      colors: {
+        'background': '#050505',
+        'on-background': '#F5F7FA',
+        'background-secondary': '#0B0D10',
+        'on-background-secondary': '#F5F7FA',
+        'surface': '#111318',
+        'on-surface': '#F5F7FA',
+        'surface-elevated': '#171A20',
+        'on-surface-elevated': '#F5F7FA',
+        'surface-hover': '#1E222A',
+        'text-secondary': '#9CA3AF',
+        'text-muted': '#828B99',
+        'outline': '#2B303B',
+        'outline-variant': '#1D2028',
+        'primary': '#22D3EE',
+        'on-primary': '#042830',
+        'primary-container': '#0B2933',
+        'on-primary-container': '#67E8F9',
+        'secondary': '#A78BFA',
+        'on-secondary': '#190D33',
+        'secondary-container': '#241942',
+        'on-secondary-container': '#DDD6FE',
+        'success': '#34D399',
+        'on-success': '#04261B',
+        'success-container': '#0A281F',
+        'on-success-container': '#6EE7B7',
+        'warning': '#FBBF24',
+        'on-warning': '#2B1900',
+        'warning-container': '#2B210B',
+        'on-warning-container': '#FDE68A',
+        'error': '#F87171',
+        'on-error': '#2B0909',
+        'error-container': '#2D1215',
+        'on-error-container': '#FCA5A5',
+      },
+      borderRadius: {
+        'sm': '6px',
+        'DEFAULT': '8px',
+        'md': '10px',
+        'lg': '12px',
+        'xl': '16px',
+        'full': '9999px',
+      },
+      spacing: {
+        'gutter-xs': '4px',
+        'gutter-sm': '8px',
+        'gutter-md': '16px',
+        'gutter-lg': '24px',
+        'gutter-xl': '32px',
+        'section': '24px',
+        'page-margin': '24px',
+      },
+      fontFamily: {
+        'display': ['"Alata"', 'sans-serif'],
+        'kpi': ['"Alata"', 'sans-serif'],
+        'headline': ['"Alata"', 'sans-serif'],
+        'title': ['"Instrument Sans"', 'sans-serif'],
+        'body': ['"Instrument Sans"', 'sans-serif'],
+        'label': ['"Instrument Sans"', 'sans-serif'],
+        'mono': ['"Spline Sans Mono"', 'monospace'],
+      },
+      fontSize: {
+        'display-lg': ['40px', { lineHeight: '48px', letterSpacing: '-0.5px', fontWeight: '400' }],
+        'display-lg-mobile': ['28px', { lineHeight: '36px', letterSpacing: '-0.25px', fontWeight: '400' }],
+        'kpi-lg': ['34px', { lineHeight: '40px', letterSpacing: '-0.5px', fontWeight: '400' }],
+        'kpi-lg-mobile': ['26px', { lineHeight: '32px', letterSpacing: '-0.25px', fontWeight: '400' }],
+        'headline-lg': ['24px', { lineHeight: '32px', letterSpacing: '-0.25px', fontWeight: '400' }],
+        'headline-md': ['18px', { lineHeight: '26px', letterSpacing: '-0.15px', fontWeight: '600' }],
+        'title-sm': ['14px', { lineHeight: '20px', letterSpacing: '0px', fontWeight: '600' }],
+        'body-md': ['14px', { lineHeight: '22px', letterSpacing: '0px', fontWeight: '400' }],
+        'body-sm': ['13px', { lineHeight: '18px', letterSpacing: '0px', fontWeight: '400' }],
+        'label-md': ['12px', { lineHeight: '16px', letterSpacing: '0.4px', fontWeight: '500' }],
+        'mono-sm': ['12px', { lineHeight: '16px', letterSpacing: '0px', fontWeight: '400' }],
+      },
+      transitionDuration: {
+        'state-change': '120ms',
+        'surface-enter': '200ms',
+        'surface-exit': '150ms',
+      },
+      transitionDelay: {
+        'state-change': '0ms',
+        'surface-enter': '0ms',
+        'surface-exit': '0ms',
+      },
+      transitionTimingFunction: {
+        'state-change': 'ease-out',
+        'surface-enter': 'cubic-bezier(0.2, 0, 0, 1)',
+        'surface-exit': 'cubic-bezier(0.3, 0, 1, 1)',
+      },
+    },
+  },
+};
+if (typeof module !== 'undefined') module.exports = globalThis.tailwind.config;
+</script>
+  <link href="https://fonts.googleapis.com/css2?family=Alata&amp;family=Instrument+Sans:wght@400;500;600&amp;family=Spline+Sans+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=block" rel="stylesheet">
+  <style>
+    .material-symbols-outlined { display: inline-block; width: 1em; height: 1em; line-height: 1 !important; box-sizing: content-box; overflow: hidden; white-space: nowrap; direction: ltr; vertical-align: middle; }
+    .dot-grid { background-image: radial-gradient(rgba(156,163,175,0.16) 1px, transparent 1px); background-size: 18px 18px; }
+  </style>
+</head>
+<body class="bg-background text-on-background font-body antialiased">
+  <div class="min-h-[1024px] flex bg-background text-on-background" data-stitch-vh="min-h-[1024px]===min-h-screen">
+    <!-- Persistent Left Sidebar -->
+    <aside class="w-56 shrink-0 bg-background-secondary border-r border-outline-variant hidden lg:flex flex-col justify-between min-h-[1024px] sticky top-0" data-stitch-vh="min-h-[1024px]===min-h-screen">
+      <div class="p-4 flex flex-col gap-6">
+        <a href="../dashboard/Dashboard.html" class="flex items-center gap-2.5 px-2 py-1">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <rect x="3" y="12" width="5" height="9" rx="1.5" fill="#22D3EE"></rect>
+            <rect x="10" y="7" width="5" height="14" rx="1.5" fill="#A78BFA"></rect>
+            <rect x="17" y="3" width="4" height="18" rx="1.5" fill="#F5F7FA" fill-opacity="0.85"></rect>
+          </svg>
+          <span class="font-title text-headline-md tracking-wide text-on-surface">SOCIALIQ</span>
+        </a>
+
+        <nav aria-label="Primary navigation" class="flex flex-col gap-1">
+          <a href="../dashboard/Dashboard.html" class="flex items-center gap-2.5 px-3 py-1.5 rounded text-text-secondary hover:text-on-surface hover:bg-surface-elevated font-body text-body-md transition-colors duration-state-change">
+            <span class="material-symbols-outlined text-[18px]">grid_view</span>
+            <span>Overview</span>
+          </a>
+          <a href="../posts/Posts.html" class="flex items-center gap-2.5 px-3 py-1.5 rounded text-text-secondary hover:text-on-surface hover:bg-surface-elevated font-body text-body-md transition-colors duration-state-change">
+            <span class="material-symbols-outlined text-[18px]">article</span>
+            <span>Posts</span>
+          </a>
+          <a href="../analytics/Analytics.html" class="flex items-center gap-2.5 px-3 py-1.5 rounded text-text-secondary hover:text-on-surface hover:bg-surface-elevated font-body text-body-md transition-colors duration-state-change">
+            <span class="material-symbols-outlined text-[18px]">bar_chart</span>
+            <span>Analytics</span>
+          </a>
+          <a href="../insights/Insights.html" class="flex items-center gap-2.5 px-3 py-1.5 rounded text-text-secondary hover:text-on-surface hover:bg-surface-elevated font-body text-body-md transition-colors duration-state-change">
+            <span class="material-symbols-outlined text-[18px]">lightbulb</span>
+            <span>Insights</span>
+          </a>
+          <a href="../prediction/Prediction.html" class="flex items-center gap-2.5 px-3 py-1.5 rounded text-text-secondary hover:text-on-surface hover:bg-surface-elevated font-body text-body-md transition-colors duration-state-change">
+            <span class="material-symbols-outlined text-[18px]">online_prediction</span>
+            <span>Prediction</span>
+          </a>
+          <a href="../compare/Compare.html" class="flex items-center gap-2.5 px-3 py-1.5 rounded text-text-secondary hover:text-on-surface hover:bg-surface-elevated font-body text-body-md transition-colors duration-state-change">
+            <span class="material-symbols-outlined text-[18px]">compare_arrows</span>
+            <span>Compare</span>
+          </a>
+          <a href="../upload/Upload.html" aria-current="page" class="flex items-center gap-2.5 px-3 py-1.5 rounded bg-surface-elevated text-on-surface border border-outline font-label text-title-sm transition-colors duration-state-change">
+            <span class="material-symbols-outlined text-[18px]">upload_file</span>
+            <span>Upload</span>
+          </a>
+        </nav>
+      </div>
+
+      <div class="p-4 border-t border-outline-variant flex flex-col gap-2">
+        <a href="../settings/Settings.html" class="flex items-center gap-2.5 px-3 py-1.5 rounded text-text-secondary hover:text-on-surface hover:bg-surface-elevated font-body text-body-md transition-colors duration-state-change">
+          <span class="material-symbols-outlined text-[18px]">settings</span>
+          <span>Settings</span>
+        </a>
+        <a href="../settings/Settings.html" class="flex items-center gap-2.5 px-2.5 py-2 rounded-md bg-surface border border-outline-variant hover:border-outline transition-colors duration-state-change">
+          <span class="w-7 h-7 rounded-full bg-primary-container text-on-primary-container font-title text-label-md flex items-center justify-center shrink-0">U</span>
+          <div class="min-w-0">
+            <p class="font-title text-body-sm text-on-surface truncate">Utkarsh</p>
+            <p class="font-mono text-mono-sm text-text-muted truncate">Creator Pro</p>
+          </div>
+        </a>
+      </div>
+    </aside>
+
+    <!-- Main Column -->
+    <div class="flex-1 flex flex-col min-w-0">
+      <!-- Compact Sticky Top Header -->
+      <header class="h-14 sticky top-0 z-20 bg-background border-b border-outline-variant px-6 flex items-center justify-between gap-4">
+        <div class="flex items-center gap-3">
+          <button type="button" aria-label="Open navigation" class="lg:hidden inline-flex items-center justify-center w-8 h-8 rounded bg-surface border border-outline-variant text-text-secondary">
+            <span class="material-symbols-outlined text-[18px]">menu</span>
+          </button>
+          <div class="flex items-center gap-2">
+            <span class="font-mono text-mono-sm text-text-muted">Workspace</span>
+            <span class="text-text-muted">/</span>
+            <span class="font-title text-body-sm text-on-surface">Utkarsh Studio</span>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-3">
+          <button type="button" class="inline-flex items-center gap-2 px-3 py-1.5 rounded bg-surface border border-outline-variant hover:border-outline text-text-secondary hover:text-on-surface font-body text-body-sm transition-colors duration-state-change">
+            <span class="material-symbols-outlined text-[16px] text-primary">calendar_today</span>
+            <span class="tabular-nums whitespace-nowrap">Nov 1 – 27</span>
+            <span class="material-symbols-outlined text-[16px]">expand_more</span>
+          </button>
+          <button data-component-id="button-icon" data-component-type="button" data-component-variant="icon" type="button" aria-label="Notifications" class="relative inline-flex items-center justify-center w-9 h-9 rounded bg-surface text-text-secondary border border-outline-variant hover:bg-surface-elevated hover:text-on-surface transition-colors duration-state-change">
+            <span class="material-symbols-outlined text-[18px]">notifications</span>
+            <span class="absolute top-2 right-2 w-1.5 h-1.5 rounded-full bg-primary"></span>
+          </button>
+          <a href="../settings/Settings.html" aria-label="Profile settings" class="w-8 h-8 rounded-full bg-surface-elevated border border-outline flex items-center justify-center font-title text-label-md text-on-surface">U</a>
+        </div>
+      </header>
+
+      <!-- Scrollable Content -->
+      <main class="flex-1 px-6 py-6 max-w-[1280px] w-full mx-auto flex flex-col gap-6">
+        <div>
+          <h1 class="font-headline text-headline-lg text-on-surface">Import Data</h1>
+          <p class="font-body text-body-md text-text-secondary mt-1">Upload your social media performance dataset.</p>
+        </div>
+
+        <!-- Dropzone -->
+        <section class="bg-surface border border-dashed border-outline rounded-lg p-10 dot-grid flex flex-col items-center justify-center text-center gap-4">
+          <div class="w-12 h-12 rounded-lg bg-surface-elevated border border-outline flex items-center justify-center text-primary">
+            <span class="material-symbols-outlined text-[24px]">description</span>
+          </div>
+          <div>
+            <h2 class="font-title text-headline-md text-on-surface">Drop your CSV file here</h2>
+            <p class="font-body text-body-sm text-text-secondary mt-1">or browse from your computer · Max 50 MB</p>
+          </div>
+          <button type="button" class="inline-flex items-center gap-2 px-4 py-2 rounded bg-primary text-on-primary font-label text-title-sm hover:bg-on-primary-container transition-colors">
+            <span class="material-symbols-outlined text-[18px]">upload</span>
+            <span>Browse CSV File</span>
+          </button>
+        </section>
+
+        <!-- Supported Columns -->
+        <section class="bg-surface border border-outline-variant rounded-lg p-5 flex flex-col gap-3">
+          <h2 class="font-label text-label-md uppercase tracking-wider text-text-secondary">Supported Columns</h2>
+          <div class="flex flex-wrap gap-2">
+            <span class="px-2.5 py-1 rounded bg-surface-elevated border border-outline-variant font-mono text-mono-sm text-on-surface">post_id</span>
+            <span class="px-2.5 py-1 rounded bg-surface-elevated border border-outline-variant font-mono text-mono-sm text-on-surface">platform</span>
+            <span class="px-2.5 py-1 rounded bg-surface-elevated border border-outline-variant font-mono text-mono-sm text-on-surface">content_type</span>
+            <span class="px-2.5 py-1 rounded bg-surface-elevated border border-outline-variant font-mono text-mono-sm text-on-surface">category</span>
+            <span class="px-2.5 py-1 rounded bg-surface-elevated border border-outline-variant font-mono text-mono-sm text-on-surface">published_at</span>
+            <span class="px-2.5 py-1 rounded bg-surface-elevated border border-outline-variant font-mono text-mono-sm text-on-surface">views</span>
+            <span class="px-2.5 py-1 rounded bg-surface-elevated border border-outline-variant font-mono text-mono-sm text-on-surface">likes</span>
+            <span class="px-2.5 py-1 rounded bg-surface-elevated border border-outline-variant font-mono text-mono-sm text-on-surface">comments</span>
+            <span class="px-2.5 py-1 rounded bg-surface-elevated border border-outline-variant font-mono text-mono-sm text-on-surface">shares</span>
+            <span class="px-2.5 py-1 rounded bg-surface-elevated border border-outline-variant font-mono text-mono-sm text-on-surface">reach</span>
+          </div>
+        </section>
+
+        <!-- Validation Summary + Preview -->
+        <section class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div class="bg-surface border border-outline-variant rounded-lg p-4 flex items-center justify-between">
+            <span class="font-label text-label-md text-text-secondary">Rows detected</span>
+            <span class="font-kpi text-headline-lg text-on-surface tabular-nums">1,248</span>
+          </div>
+          <div class="bg-surface border border-outline-variant rounded-lg p-4 flex items-center justify-between">
+            <span class="font-label text-label-md text-text-secondary">Valid</span>
+            <span class="font-kpi text-headline-lg text-success tabular-nums">1,231</span>
+          </div>
+          <div class="bg-surface border border-outline-variant rounded-lg p-4 flex items-center justify-between">
+            <span class="font-label text-label-md text-text-secondary">Warnings</span>
+            <span class="font-kpi text-headline-lg text-warning tabular-nums">17</span>
+          </div>
+        </section>
+
+        <!-- Preview Table -->
+        <section class="bg-surface border border-outline-variant rounded-lg overflow-hidden">
+          <div class="px-5 py-3.5 border-b border-outline-variant flex items-center justify-between">
+            <span class="font-title text-title-sm text-on-surface">Dataset Preview (socialiq_nov2026.csv)</span>
+            <button type="button" class="px-3 py-1.5 rounded bg-primary text-on-primary font-label text-label-md">Import CSV</button>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+              <thead>
+                <tr class="border-b border-outline-variant bg-background-secondary font-mono text-mono-sm text-text-muted">
+                  <th class="px-4 py-2.5">post_id</th>
+                  <th class="px-4 py-2.5">platform</th>
+                  <th class="px-4 py-2.5">content_type</th>
+                  <th class="px-4 py-2.5">category</th>
+                  <th class="px-4 py-2.5 text-right">views</th>
+                  <th class="px-4 py-2.5 text-right">likes</th>
+                  <th class="px-4 py-2.5">status</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-outline-variant font-mono text-mono-sm tabular-nums">
+                <tr>
+                  <td class="px-4 py-2.5 text-on-surface">pst_9041</td>
+                  <td class="px-4 py-2.5 text-text-secondary">Instagram</td>
+                  <td class="px-4 py-2.5 text-text-secondary">Reel</td>
+                  <td class="px-4 py-2.5 text-text-secondary">Travel</td>
+                  <td class="px-4 py-2.5 text-right text-on-surface">412,680</td>
+                  <td class="px-4 py-2.5 text-right text-on-surface">28,410</td>
+                  <td class="px-4 py-2.5 text-success">Valid</td>
+                </tr>
+                <tr>
+                  <td class="px-4 py-2.5 text-on-surface">pst_9042</td>
+                  <td class="px-4 py-2.5 text-text-secondary">YouTube</td>
+                  <td class="px-4 py-2.5 text-text-secondary">Video</td>
+                  <td class="px-4 py-2.5 text-text-secondary">Tech</td>
+                  <td class="px-4 py-2.5 text-right text-on-surface">164,500</td>
+                  <td class="px-4 py-2.5 text-right text-on-surface">8,320</td>
+                  <td class="px-4 py-2.5 text-success">Valid</td>
+                </tr>
+                <tr>
+                  <td class="px-4 py-2.5 text-on-surface">pst_9043</td>
+                  <td class="px-4 py-2.5 text-text-secondary">Instagram</td>
+                  <td class="px-4 py-2.5 text-text-secondary">Image</td>
+                  <td class="px-4 py-2.5 text-text-muted">—</td>
+                  <td class="px-4 py-2.5 text-right text-on-surface">42,310</td>
+                  <td class="px-4 py-2.5 text-right text-on-surface">1,520</td>
+                  <td class="px-4 py-2.5 text-warning">Missing category</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+
+</body></html>

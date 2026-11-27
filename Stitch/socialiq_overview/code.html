@@ -1,0 +1,588 @@
+<!DOCTYPE html><html lang="en"><head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SocialIQ — Overview</title>
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <script id="tailwind-config">/** @type {import('tailwindcss').Config} */
+globalThis.tailwind = globalThis.tailwind || {};
+globalThis.tailwind.config = {
+  darkMode: 'class',
+  theme: {
+    extend: {
+      colors: {
+        'background': '#050505',
+        'on-background': '#F5F7FA',
+        'background-secondary': '#0B0D10',
+        'on-background-secondary': '#F5F7FA',
+        'surface': '#111318',
+        'on-surface': '#F5F7FA',
+        'surface-elevated': '#171A20',
+        'on-surface-elevated': '#F5F7FA',
+        'surface-hover': '#1E222A',
+        'text-secondary': '#9CA3AF',
+        'text-muted': '#828B99',
+        'outline': '#2B303B',
+        'outline-variant': '#1D2028',
+        'primary': '#22D3EE',
+        'on-primary': '#042830',
+        'primary-container': '#0B2933',
+        'on-primary-container': '#67E8F9',
+        'secondary': '#A78BFA',
+        'on-secondary': '#190D33',
+        'secondary-container': '#241942',
+        'on-secondary-container': '#DDD6FE',
+        'success': '#34D399',
+        'on-success': '#04261B',
+        'success-container': '#0A281F',
+        'on-success-container': '#6EE7B7',
+        'warning': '#FBBF24',
+        'on-warning': '#2B1900',
+        'warning-container': '#2B210B',
+        'on-warning-container': '#FDE68A',
+        'error': '#F87171',
+        'on-error': '#2B0909',
+        'error-container': '#2D1215',
+        'on-error-container': '#FCA5A5',
+      },
+      borderRadius: {
+        'sm': '6px',
+        'DEFAULT': '8px',
+        'md': '10px',
+        'lg': '12px',
+        'xl': '16px',
+        'full': '9999px',
+      },
+      spacing: {
+        'gutter-xs': '4px',
+        'gutter-sm': '8px',
+        'gutter-md': '16px',
+        'gutter-lg': '24px',
+        'gutter-xl': '32px',
+        'section': '24px',
+        'page-margin': '24px',
+      },
+      fontFamily: {
+        'display': ['"Alata"', 'sans-serif'],
+        'kpi': ['"Alata"', 'sans-serif'],
+        'headline': ['"Alata"', 'sans-serif'],
+        'title': ['"Instrument Sans"', 'sans-serif'],
+        'body': ['"Instrument Sans"', 'sans-serif'],
+        'label': ['"Instrument Sans"', 'sans-serif'],
+        'mono': ['"Spline Sans Mono"', 'monospace'],
+      },
+      fontSize: {
+        'display-lg': ['40px', { lineHeight: '48px', letterSpacing: '-0.5px', fontWeight: '400' }],
+        'display-lg-mobile': ['28px', { lineHeight: '36px', letterSpacing: '-0.25px', fontWeight: '400' }],
+        'kpi-lg': ['34px', { lineHeight: '40px', letterSpacing: '-0.5px', fontWeight: '400' }],
+        'kpi-lg-mobile': ['26px', { lineHeight: '32px', letterSpacing: '-0.25px', fontWeight: '400' }],
+        'headline-lg': ['24px', { lineHeight: '32px', letterSpacing: '-0.25px', fontWeight: '400' }],
+        'headline-md': ['18px', { lineHeight: '26px', letterSpacing: '-0.15px', fontWeight: '600' }],
+        'title-sm': ['14px', { lineHeight: '20px', letterSpacing: '0px', fontWeight: '600' }],
+        'body-md': ['14px', { lineHeight: '22px', letterSpacing: '0px', fontWeight: '400' }],
+        'body-sm': ['13px', { lineHeight: '18px', letterSpacing: '0px', fontWeight: '400' }],
+        'label-md': ['12px', { lineHeight: '16px', letterSpacing: '0.4px', fontWeight: '500' }],
+        'mono-sm': ['12px', { lineHeight: '16px', letterSpacing: '0px', fontWeight: '400' }],
+      },
+      transitionDuration: {
+        'state-change': '120ms',
+        'surface-enter': '200ms',
+        'surface-exit': '150ms',
+      },
+      transitionDelay: {
+        'state-change': '0ms',
+        'surface-enter': '0ms',
+        'surface-exit': '0ms',
+      },
+      transitionTimingFunction: {
+        'state-change': 'ease-out',
+        'surface-enter': 'cubic-bezier(0.2, 0, 0, 1)',
+        'surface-exit': 'cubic-bezier(0.3, 0, 1, 1)',
+      },
+    },
+  },
+};
+if (typeof module !== 'undefined') module.exports = globalThis.tailwind.config;
+</script>
+  <link href="https://fonts.googleapis.com/css2?family=Alata&amp;family=Instrument+Sans:wght@400;500;600&amp;family=Spline+Sans+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=block" rel="stylesheet">
+  <style>
+    .material-symbols-outlined { display: inline-block; width: 1em; height: 1em; line-height: 1 !important; box-sizing: content-box; overflow: hidden; white-space: nowrap; direction: ltr; vertical-align: middle; }
+    .kpi-depth { box-shadow: inset 0 1px 0 rgba(255,255,255,0.04), 0 8px 24px rgba(0,0,0,0.42); }
+    .kpi-glow-cyan { background-image: radial-gradient(120% 90% at 100% 0%, rgba(34,211,238,0.07) 0%, transparent 60%); }
+    .kpi-glow-violet { background-image: radial-gradient(120% 90% at 100% 0%, rgba(167,139,250,0.07) 0%, transparent 60%); }
+  </style>
+</head>
+<body class="bg-background text-on-background font-body antialiased">
+  <div class="min-h-[1024px] flex bg-background text-on-background" data-stitch-vh="min-h-[1024px]===min-h-screen">
+    <!-- Persistent Left Sidebar -->
+    <aside class="w-56 shrink-0 bg-background-secondary border-r border-outline-variant hidden lg:flex flex-col justify-between min-h-[1024px] sticky top-0" data-stitch-vh="min-h-[1024px]===min-h-screen">
+      <div class="p-4 flex flex-col gap-6">
+        <a href="../dashboard/Dashboard.html" class="flex items-center gap-2.5 px-2 py-1">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <rect x="3" y="12" width="5" height="9" rx="1.5" fill="#22D3EE"></rect>
+            <rect x="10" y="7" width="5" height="14" rx="1.5" fill="#A78BFA"></rect>
+            <rect x="17" y="3" width="4" height="18" rx="1.5" fill="#F5F7FA" fill-opacity="0.85"></rect>
+          </svg>
+          <span class="font-title text-headline-md tracking-wide text-on-surface">SOCIALIQ</span>
+        </a>
+
+        <nav aria-label="Primary navigation" class="flex flex-col gap-1">
+          <a href="../dashboard/Dashboard.html" aria-current="page" class="flex items-center gap-2.5 px-3 py-1.5 rounded bg-surface-elevated text-on-surface border border-outline font-label text-title-sm transition-colors duration-state-change">
+            <span class="material-symbols-outlined text-[18px]">grid_view</span>
+            <span>Overview</span>
+          </a>
+          <a href="../posts/Posts.html" class="flex items-center gap-2.5 px-3 py-1.5 rounded text-text-secondary hover:text-on-surface hover:bg-surface-elevated font-body text-body-md transition-colors duration-state-change">
+            <span class="material-symbols-outlined text-[18px]">article</span>
+            <span>Posts</span>
+          </a>
+          <a href="../analytics/Analytics.html" class="flex items-center gap-2.5 px-3 py-1.5 rounded text-text-secondary hover:text-on-surface hover:bg-surface-elevated font-body text-body-md transition-colors duration-state-change">
+            <span class="material-symbols-outlined text-[18px]">bar_chart</span>
+            <span>Analytics</span>
+          </a>
+          <a href="../insights/Insights.html" class="flex items-center gap-2.5 px-3 py-1.5 rounded text-text-secondary hover:text-on-surface hover:bg-surface-elevated font-body text-body-md transition-colors duration-state-change">
+            <span class="material-symbols-outlined text-[18px]">lightbulb</span>
+            <span>Insights</span>
+          </a>
+          <a href="../prediction/Prediction.html" class="flex items-center gap-2.5 px-3 py-1.5 rounded text-text-secondary hover:text-on-surface hover:bg-surface-elevated font-body text-body-md transition-colors duration-state-change">
+            <span class="material-symbols-outlined text-[18px]">online_prediction</span>
+            <span>Prediction</span>
+          </a>
+          <a href="../compare/Compare.html" class="flex items-center gap-2.5 px-3 py-1.5 rounded text-text-secondary hover:text-on-surface hover:bg-surface-elevated font-body text-body-md transition-colors duration-state-change">
+            <span class="material-symbols-outlined text-[18px]">compare_arrows</span>
+            <span>Compare</span>
+          </a>
+          <a href="../upload/Upload.html" class="flex items-center gap-2.5 px-3 py-1.5 rounded text-text-secondary hover:text-on-surface hover:bg-surface-elevated font-body text-body-md transition-colors duration-state-change">
+            <span class="material-symbols-outlined text-[18px]">upload_file</span>
+            <span>Upload</span>
+          </a>
+        </nav>
+      </div>
+
+      <div class="p-4 border-t border-outline-variant flex flex-col gap-2">
+        <a href="../settings/Settings.html" class="flex items-center gap-2.5 px-3 py-1.5 rounded text-text-secondary hover:text-on-surface hover:bg-surface-elevated font-body text-body-md transition-colors duration-state-change">
+          <span class="material-symbols-outlined text-[18px]">settings</span>
+          <span>Settings</span>
+        </a>
+        <a href="../settings/Settings.html" class="flex items-center gap-2.5 px-2.5 py-2 rounded-md bg-surface border border-outline-variant hover:border-outline transition-colors duration-state-change">
+          <span class="w-7 h-7 rounded-full bg-primary-container text-on-primary-container font-title text-label-md flex items-center justify-center shrink-0">U</span>
+          <div class="min-w-0">
+            <p class="font-title text-body-sm text-on-surface truncate">Utkarsh</p>
+            <p class="font-mono text-mono-sm text-text-muted truncate">Creator Pro</p>
+          </div>
+        </a>
+      </div>
+    </aside>
+
+    <!-- Main Column -->
+    <div class="flex-1 flex flex-col min-w-0">
+      <!-- Compact Sticky Top Header -->
+      <header class="h-14 sticky top-0 z-20 bg-background border-b border-outline-variant px-6 flex items-center justify-between gap-4">
+        <div class="flex items-center gap-3">
+          <button type="button" aria-label="Open navigation" class="lg:hidden inline-flex items-center justify-center w-8 h-8 rounded bg-surface border border-outline-variant text-text-secondary">
+            <span class="material-symbols-outlined text-[18px]">menu</span>
+          </button>
+          <div class="flex items-center gap-2">
+            <span class="font-mono text-mono-sm text-text-muted">Workspace</span>
+            <span class="text-text-muted">/</span>
+            <span class="font-title text-body-sm text-on-surface">Utkarsh Studio</span>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-3">
+          <button type="button" class="inline-flex items-center gap-2 px-3 py-1.5 rounded bg-surface border border-outline-variant hover:border-outline text-text-secondary hover:text-on-surface font-body text-body-sm transition-colors duration-state-change">
+            <span class="material-symbols-outlined text-[16px] text-primary">calendar_today</span>
+            <span class="tabular-nums whitespace-nowrap">Nov 1 – 27</span>
+            <span class="material-symbols-outlined text-[16px]">expand_more</span>
+          </button>
+
+          <button data-component-id="button-icon" data-component-type="button" data-component-variant="icon" type="button" aria-label="Notifications" class="relative inline-flex items-center justify-center w-9 h-9 rounded bg-surface text-text-secondary border border-outline-variant hover:bg-surface-elevated hover:text-on-surface transition-colors duration-state-change">
+            <span class="material-symbols-outlined text-[18px]">notifications</span>
+            <span data-component-id="badge-dot" data-component-type="badge" data-component-variant="dot" role="status" aria-label="Unread notifications" class="absolute top-2 right-2 w-1.5 h-1.5 rounded-full bg-primary"></span>
+          </button>
+
+          <a href="../settings/Settings.html" aria-label="Profile settings" class="w-8 h-8 rounded-full bg-surface-elevated border border-outline flex items-center justify-center font-title text-label-md text-on-surface hover:border-primary/40 transition-colors">
+            U
+          </a>
+        </div>
+      </header>
+
+      <!-- Scrollable Content -->
+      <main class="flex-1 px-6 py-6 max-w-[1280px] w-full mx-auto flex flex-col gap-6">
+        <!-- Page Heading -->
+        <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+          <div>
+            <h1 class="font-headline text-headline-lg text-on-surface">Good evening, Utkarsh</h1>
+            <p class="font-body text-body-md text-text-secondary mt-1">Here&#39;s how your content is performing.</p>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-surface border border-outline-variant font-mono text-mono-sm text-text-secondary">
+              <span class="w-1.5 h-1.5 rounded-full bg-success"></span>
+              Synced 4m ago
+            </span>
+          </div>
+        </div>
+
+        <!-- 4 Primary KPI Cards -->
+        <section aria-label="Key Performance Indicators" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 items-stretch">
+          <article data-component-id="card-elevated" data-component-type="card" data-component-variant="elevated" class="bg-surface border border-outline-variant rounded-lg p-5 kpi-depth flex flex-col justify-between gap-3">
+            <header class="flex items-center justify-between">
+              <h2 data-design-text-token="label-md" class="font-label text-label-md uppercase tracking-wider text-text-secondary">TOTAL POSTS</h2>
+              <span class="material-symbols-outlined text-[18px] text-text-secondary">layers</span>
+            </header>
+            <div class="flex items-center justify-between gap-2">
+              <p data-design-text-token="kpi-lg" class="font-kpi text-kpi-lg-mobile md:text-kpi-lg text-on-surface tabular-nums">148</p>
+              <span class="inline-flex items-center gap-1 font-mono text-mono-sm text-success tabular-nums">
+                <span class="material-symbols-outlined text-[14px]">trending_up</span>
+                +12.1%
+              </span>
+            </div>
+          </article>
+
+          <article data-component-id="card-elevated" data-component-type="card" data-component-variant="elevated" class="bg-surface border border-outline-variant rounded-lg p-5 kpi-depth flex flex-col justify-between gap-3">
+            <header class="flex items-center justify-between">
+              <h2 data-design-text-token="label-md" class="font-label text-label-md uppercase tracking-wider text-text-secondary">TOTAL VIEWS</h2>
+              <span class="material-symbols-outlined text-[18px] text-text-secondary">visibility</span>
+            </header>
+            <div class="flex items-center justify-between gap-2">
+              <p data-design-text-token="kpi-lg" class="font-kpi text-kpi-lg-mobile md:text-kpi-lg text-on-surface tabular-nums">2.84M</p>
+              <span class="inline-flex items-center gap-1 font-mono text-mono-sm text-success tabular-nums">
+                <span class="material-symbols-outlined text-[14px]">trending_up</span>
+                +18.4%
+              </span>
+            </div>
+          </article>
+
+          <article data-component-id="card-elevated" data-component-type="card" data-component-variant="elevated" class="bg-surface border border-outline-variant rounded-lg p-5 kpi-depth flex flex-col justify-between gap-3">
+            <header class="flex items-center justify-between">
+              <h2 data-design-text-token="label-md" class="font-label text-label-md uppercase tracking-wider text-text-secondary">TOTAL LIKES</h2>
+              <span class="material-symbols-outlined text-[18px] text-text-secondary">favorite</span>
+            </header>
+            <div class="flex items-center justify-between gap-2">
+              <p data-design-text-token="kpi-lg" class="font-kpi text-kpi-lg-mobile md:text-kpi-lg text-on-surface tabular-nums">194.2K</p>
+              <span class="inline-flex items-center gap-1 font-mono text-mono-sm text-success tabular-nums">
+                <span class="material-symbols-outlined text-[14px]">trending_up</span>
+                +9.7%
+              </span>
+            </div>
+          </article>
+
+          <article data-component-id="card-elevated" data-component-type="card" data-component-variant="elevated" class="bg-surface border border-outline-variant rounded-lg p-5 kpi-depth flex flex-col justify-between gap-3">
+            <header class="flex items-center justify-between">
+              <h2 data-design-text-token="label-md" class="font-label text-label-md uppercase tracking-wider text-text-secondary">ENGAGEMENT RATE</h2>
+              <span class="material-symbols-outlined text-[18px] text-text-secondary">bolt</span>
+            </header>
+            <div class="flex items-center justify-between gap-2">
+              <p data-design-text-token="kpi-lg" class="font-kpi text-kpi-lg-mobile md:text-kpi-lg text-on-surface tabular-nums">6.84%</p>
+              <span class="inline-flex items-center gap-1 font-mono text-mono-sm text-success tabular-nums">
+                <span class="material-symbols-outlined text-[14px]">trending_up</span>
+                +1.2%
+              </span>
+            </div>
+          </article>
+        </section>
+
+        <!-- Main Charts Row -->
+        <section class="grid grid-cols-1 xl:grid-cols-3 gap-4 items-stretch">
+          <!-- Performance Overview (2 cols) -->
+          <div class="xl:col-span-2 bg-surface border border-outline-variant rounded-lg p-5 kpi-depth flex flex-col justify-between gap-4">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div>
+                <h2 class="font-title text-headline-md text-on-surface">Performance Overview</h2>
+                <p class="font-body text-body-sm text-text-secondary">27-day trajectory across published content</p>
+              </div>
+              <div class="inline-flex p-1 rounded bg-background-secondary border border-outline-variant self-start" role="tablist" aria-label="Metric selector">
+                <button type="button" onclick="switchMetric(&#39;views&#39;)" id="tab-views" class="px-3 py-1 rounded-sm bg-surface-elevated text-primary font-label text-label-md transition-colors">Views</button>
+                <button type="button" onclick="switchMetric(&#39;reach&#39;)" id="tab-reach" class="px-3 py-1 rounded-sm text-text-secondary hover:text-on-surface font-label text-label-md transition-colors">Reach</button>
+                <button type="button" onclick="switchMetric(&#39;engagement&#39;)" id="tab-engagement" class="px-3 py-1 rounded-sm text-text-secondary hover:text-on-surface font-label text-label-md transition-colors">Engagement</button>
+              </div>
+            </div>
+
+            <div class="relative w-full h-56">
+              <svg viewBox="0 0 720 210" class="w-full h-full overflow-visible" role="img" aria-label="Performance time series chart">
+                <defs>
+                  <linearGradient id="cyanArea" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stop-color="#22D3EE" stop-opacity="0.22"></stop>
+                    <stop offset="100%" stop-color="#22D3EE" stop-opacity="0"></stop>
+                  </linearGradient>
+                  <linearGradient id="violetArea" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stop-color="#A78BFA" stop-opacity="0.22"></stop>
+                    <stop offset="100%" stop-color="#A78BFA" stop-opacity="0"></stop>
+                  </linearGradient>
+                </defs>
+                <!-- Horizontal Grid -->
+                <g stroke="#1D2028" stroke-width="1">
+                  <line x1="40" y1="20" x2="700" y2="20"></line>
+                  <line x1="40" y1="65" x2="700" y2="65"></line>
+                  <line x1="40" y1="110" x2="700" y2="110"></line>
+                  <line x1="40" y1="155" x2="700" y2="155"></line>
+                  <line x1="40" y1="185" x2="700" y2="185"></line>
+                </g>
+                <!-- Y Labels -->
+                <g fill="#6B7280" font-family="Spline Sans Mono, monospace" font-size="11">
+                  <text x="0" y="24" id="y-max">160K</text>
+                  <text x="0" y="69" id="y-mid2">120K</text>
+                  <text x="0" y="114" id="y-mid1">80K</text>
+                  <text x="0" y="159" id="y-low">40K</text>
+                </g>
+                <!-- Area + Line -->
+                <path id="chart-area" d="M40,145 L106,132 L172,118 L238,125 L304,92 L370,104 L436,74 L502,62 L568,48 L634,54 L700,28 L700,185 L40,185 Z" fill="url(#cyanArea)"></path>
+                <path id="chart-line" d="M40,145 L106,132 L172,118 L238,125 L304,92 L370,104 L436,74 L502,62 L568,48 L634,54 L700,28" fill="none" stroke="#22D3EE" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"></path>
+                <!-- Highlight point -->
+                <circle cx="568" cy="48" r="4" fill="#050505" stroke="#22D3EE" stroke-width="2"></circle>
+                <g transform="translate(510, 8)">
+                  <rect width="112" height="30" rx="6" fill="#171A20" stroke="#2B303B"></rect>
+                  <text x="10" y="19" fill="#F5F7FA" font-family="Spline Sans Mono, monospace" font-size="11" id="tooltip-val">Nov 21 · 142.8K</text>
+                </g>
+                <!-- X Labels -->
+                <g fill="#6B7280" font-family="Spline Sans Mono, monospace" font-size="11">
+                  <text x="40" y="204">Nov 1</text>
+                  <text x="172" y="204">Nov 7</text>
+                  <text x="304" y="204">Nov 13</text>
+                  <text x="436" y="204">Nov 19</text>
+                  <text x="568" y="204">Nov 23</text>
+                  <text x="665" y="204">Nov 27</text>
+                </g>
+              </svg>
+            </div>
+          </div>
+
+          <!-- Content Performance (1 col) -->
+          <div class="bg-surface border border-outline-variant rounded-lg p-5 kpi-depth flex flex-col justify-between gap-4">
+            <div>
+              <h2 class="font-title text-headline-md text-on-surface">Content Performance</h2>
+              <p class="font-body text-body-sm text-text-secondary">Average views per format</p>
+            </div>
+
+            <div class="flex flex-col gap-4 my-auto">
+              <div class="flex flex-col gap-1.5">
+                <div class="flex items-center justify-between text-body-sm">
+                  <span class="font-title text-on-surface">Reels</span>
+                  <span class="font-mono text-mono-sm text-primary tabular-nums">34.2K avg</span>
+                </div>
+                <div class="h-2.5 w-full rounded-full bg-background-secondary overflow-hidden">
+                  <div class="h-full rounded-full bg-primary" style="width: 88%;"></div>
+                </div>
+              </div>
+
+              <div class="flex flex-col gap-1.5">
+                <div class="flex items-center justify-between text-body-sm">
+                  <span class="font-title text-on-surface">Carousels</span>
+                  <span class="font-mono text-mono-sm text-secondary tabular-nums">26.8K avg</span>
+                </div>
+                <div class="h-2.5 w-full rounded-full bg-background-secondary overflow-hidden">
+                  <div class="h-full rounded-full bg-secondary" style="width: 69%;"></div>
+                </div>
+              </div>
+
+              <div class="flex flex-col gap-1.5">
+                <div class="flex items-center justify-between text-body-sm">
+                  <span class="font-title text-on-surface">Videos</span>
+                  <span class="font-mono text-mono-sm text-text-secondary tabular-nums">21.4K avg</span>
+                </div>
+                <div class="h-2.5 w-full rounded-full bg-background-secondary overflow-hidden">
+                  <div class="h-full rounded-full bg-text-secondary" style="width: 55%;"></div>
+                </div>
+              </div>
+
+              <div class="flex flex-col gap-1.5">
+                <div class="flex items-center justify-between text-body-sm">
+                  <span class="font-title text-on-surface">Images</span>
+                  <span class="font-mono text-mono-sm text-text-muted tabular-nums">14.1K avg</span>
+                </div>
+                <div class="h-2.5 w-full rounded-full bg-background-secondary overflow-hidden">
+                  <div class="h-full rounded-full bg-outline" style="width: 36%;"></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="pt-3 border-t border-outline-variant flex items-center justify-between">
+              <span class="font-mono text-mono-sm text-text-muted">Reels lead by +42%</span>
+              <a href="../analytics/Analytics.html" class="font-label text-label-md text-primary hover:underline">Full analysis</a>
+            </div>
+          </div>
+        </section>
+
+        <!-- Bottom Grid: Top Performing Posts & Quick Insights -->
+        <section class="grid grid-cols-1 xl:grid-cols-3 gap-4 items-stretch">
+          <!-- Top Performing Posts (2 cols) -->
+          <div class="xl:col-span-2 bg-surface border border-outline-variant rounded-lg p-5 flex flex-col gap-4">
+            <div class="flex items-center justify-between">
+              <div>
+                <h2 class="font-title text-headline-md text-on-surface">Top Performing Posts</h2>
+                <p class="font-body text-body-sm text-text-secondary">Ranked by views and engagement efficiency</p>
+              </div>
+              <a href="../posts/Posts.html" class="font-label text-label-md text-primary hover:underline">View all posts</a>
+            </div>
+
+            <div class="flex flex-col divide-y divide-outline-variant">
+              <div class="py-3 flex items-center justify-between gap-4">
+                <div class="flex items-center gap-3 min-w-0">
+                  <div class="w-11 h-11 rounded bg-surface-elevated border border-outline flex items-center justify-center shrink-0">
+                    <span class="material-symbols-outlined text-[18px] text-primary">play_circle</span>
+                  </div>
+                  <div class="min-w-0">
+                    <p class="font-title text-title-sm text-on-surface truncate">Kyoto Morning Light — 48h Reel</p>
+                    <p class="font-body text-body-sm text-text-secondary">Reel · Travel</p>
+                  </div>
+                </div>
+                <div class="flex items-center gap-5 shrink-0">
+                  <div class="text-right">
+                    <p class="font-mono text-mono-sm text-on-surface tabular-nums">412.6K</p>
+                    <p class="font-label text-label-md text-text-muted">Views</p>
+                  </div>
+                  <div class="text-right hidden sm:block">
+                    <p class="font-mono text-mono-sm text-success tabular-nums">8.4%</p>
+                    <p class="font-label text-label-md text-text-muted">ER</p>
+                  </div>
+                  <span data-component-id="badge-success" data-component-type="badge" data-component-variant="success" role="status" class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-success-container text-on-success-container border border-success/20 font-label text-label-md">High</span>
+                </div>
+              </div>
+
+              <div class="py-3 flex items-center justify-between gap-4">
+                <div class="flex items-center gap-3 min-w-0">
+                  <div class="w-11 h-11 rounded bg-surface-elevated border border-outline flex items-center justify-center shrink-0">
+                    <span class="material-symbols-outlined text-[18px] text-secondary">view_carousel</span>
+                  </div>
+                  <div class="min-w-0">
+                    <p class="font-title text-title-sm text-on-surface truncate">My Desk Setup for 2026 Creators</p>
+                    <p class="font-body text-body-sm text-text-secondary">Carousel · Tech</p>
+                  </div>
+                </div>
+                <div class="flex items-center gap-5 shrink-0">
+                  <div class="text-right">
+                    <p class="font-mono text-mono-sm text-on-surface tabular-nums">298.4K</p>
+                    <p class="font-label text-label-md text-text-muted">Views</p>
+                  </div>
+                  <div class="text-right hidden sm:block">
+                    <p class="font-mono text-mono-sm text-success tabular-nums">7.9%</p>
+                    <p class="font-label text-label-md text-text-muted">ER</p>
+                  </div>
+                  <span data-component-id="badge-success" data-component-type="badge" data-component-variant="success" role="status" class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-success-container text-on-success-container border border-success/20 font-label text-label-md">High</span>
+                </div>
+              </div>
+
+              <div class="py-3 flex items-center justify-between gap-4">
+                <div class="flex items-center gap-3 min-w-0">
+                  <div class="w-11 h-11 rounded bg-surface-elevated border border-outline flex items-center justify-center shrink-0">
+                    <span class="material-symbols-outlined text-[18px] text-primary">play_circle</span>
+                  </div>
+                  <div class="min-w-0">
+                    <p class="font-title text-title-sm text-on-surface truncate">3 Editing Cuts That Hold Retention</p>
+                    <p class="font-body text-body-sm text-text-secondary">Reel · Education</p>
+                  </div>
+                </div>
+                <div class="flex items-center gap-5 shrink-0">
+                  <div class="text-right">
+                    <p class="font-mono text-mono-sm text-on-surface tabular-nums">241.0K</p>
+                    <p class="font-label text-label-md text-text-muted">Views</p>
+                  </div>
+                  <div class="text-right hidden sm:block">
+                    <p class="font-mono text-mono-sm text-success tabular-nums">7.2%</p>
+                    <p class="font-label text-label-md text-text-muted">ER</p>
+                  </div>
+                  <span data-component-id="badge-success" data-component-type="badge" data-component-variant="success" role="status" class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-success-container text-on-success-container border border-success/20 font-label text-label-md">High</span>
+                </div>
+              </div>
+
+              <div class="py-3 flex items-center justify-between gap-4">
+                <div class="flex items-center gap-3 min-w-0">
+                  <div class="w-11 h-11 rounded bg-surface-elevated border border-outline flex items-center justify-center shrink-0">
+                    <span class="material-symbols-outlined text-[18px] text-text-secondary">videocam</span>
+                  </div>
+                  <div class="min-w-0">
+                    <p class="font-title text-title-sm text-on-surface truncate">Campus Hackathon Recap Film</p>
+                    <p class="font-body text-body-sm text-text-secondary">Video · Community</p>
+                  </div>
+                </div>
+                <div class="flex items-center gap-5 shrink-0">
+                  <div class="text-right">
+                    <p class="font-mono text-mono-sm text-on-surface tabular-nums">164.5K</p>
+                    <p class="font-label text-label-md text-text-muted">Views</p>
+                  </div>
+                  <div class="text-right hidden sm:block">
+                    <p class="font-mono text-mono-sm text-warning tabular-nums">5.1%</p>
+                    <p class="font-label text-label-md text-text-muted">ER</p>
+                  </div>
+                  <span data-component-id="badge-warning" data-component-type="badge" data-component-variant="warning" role="status" class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-warning-container text-on-warning-container border border-warning/20 font-label text-label-md">Medium</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Quick Insights (1 col) -->
+          <div class="bg-surface border border-outline-variant rounded-lg p-5 flex flex-col gap-4">
+            <div class="flex items-center justify-between">
+              <h2 class="font-title text-headline-md text-on-surface">Quick Insights</h2>
+              <a href="../insights/Insights.html" class="font-label text-label-md text-primary hover:underline">All insights</a>
+            </div>
+
+            <div class="flex flex-col gap-3">
+              <div class="p-3.5 rounded bg-surface-elevated border border-outline-variant">
+                <div class="flex items-center gap-2 mb-1">
+                  <span class="w-1.5 h-1.5 rounded-full bg-primary"></span>
+                  <span class="font-label text-label-md uppercase tracking-wider text-primary">Content Format</span>
+                </div>
+                <p class="font-body text-body-sm text-on-surface">Reels outperform images by <span class="font-mono text-primary">42%</span> in average reach.</p>
+              </div>
+
+              <div class="p-3.5 rounded bg-surface-elevated border border-outline-variant">
+                <div class="flex items-center gap-2 mb-1">
+                  <span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+                  <span class="font-label text-label-md uppercase tracking-wider text-secondary">Posting Window</span>
+                </div>
+                <p class="font-body text-body-sm text-on-surface">Evening posts (<span class="font-mono text-secondary">7 PM – 9 PM</span>) generate the highest engagement.</p>
+              </div>
+
+              <div class="p-3.5 rounded bg-surface-elevated border border-outline-variant">
+                <div class="flex items-center gap-2 mb-1">
+                  <span class="w-1.5 h-1.5 rounded-full bg-success"></span>
+                  <span class="font-label text-label-md uppercase tracking-wider text-success">Category Lead</span>
+                </div>
+                <p class="font-body text-body-sm text-on-surface">Travel content currently has the strongest reach across all channels.</p>
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <script>
+    function switchMetric(metric) {
+      const area = document.getElementById('chart-area');
+      const line = document.getElementById('chart-line');
+      const tooltip = document.getElementById('tooltip-val');
+      const tabs = ['views', 'reach', 'engagement'];
+      tabs.forEach(t => {
+        const el = document.getElementById('tab-' + t);
+        if (t === metric) {
+          el.className = 'px-3 py-1 rounded-sm bg-surface-elevated text-primary font-label text-label-md transition-colors';
+        } else {
+          el.className = 'px-3 py-1 rounded-sm text-text-secondary hover:text-on-surface font-label text-label-md transition-colors';
+        }
+      });
+
+      if (metric === 'views') {
+        line.setAttribute('d', 'M40,145 L106,132 L172,118 L238,125 L304,92 L370,104 L436,74 L502,62 L568,48 L634,54 L700,28');
+        area.setAttribute('d', 'M40,145 L106,132 L172,118 L238,125 L304,92 L370,104 L436,74 L502,62 L568,48 L634,54 L700,28 L700,185 L40,185 Z');
+        line.setAttribute('stroke', '#22D3EE');
+        area.setAttribute('fill', 'url(#cyanArea)');
+        tooltip.textContent = 'Nov 21 · 142.8K';
+      } else if (metric === 'reach') {
+        line.setAttribute('d', 'M40,152 L106,138 L172,126 L238,110 L304,98 L370,88 L436,82 L502,68 L568,52 L634,46 L700,34');
+        area.setAttribute('d', 'M40,152 L106,138 L172,126 L238,110 L304,98 L370,88 L436,82 L502,68 L568,52 L634,46 L700,34 L700,185 L40,185 Z');
+        line.setAttribute('stroke', '#A78BFA');
+        area.setAttribute('fill', 'url(#violetArea)');
+        tooltip.textContent = 'Nov 21 · 118.4K';
+      } else {
+        line.setAttribute('d', 'M40,130 L106,120 L172,134 L238,108 L304,96 L370,80 L436,86 L502,60 L568,42 L634,50 L700,38');
+        area.setAttribute('d', 'M40,130 L106,120 L172,134 L238,108 L304,96 L370,80 L436,86 L502,60 L568,42 L634,50 L700,38 L700,185 L40,185 Z');
+        line.setAttribute('stroke', '#34D399');
+        area.setAttribute('fill', 'url(#cyanArea)');
+        tooltip.textContent = 'Nov 21 · 7.9% ER';
+      }
+    }
+  </script>
+
+
+</body></html>

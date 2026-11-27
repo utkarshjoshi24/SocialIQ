@@ -1,0 +1,186 @@
+<!DOCTYPE html><html lang="en"><head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SocialIQ — Login</title>
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <script id="tailwind-config">/** @type {import('tailwindcss').Config} */
+globalThis.tailwind = globalThis.tailwind || {};
+globalThis.tailwind.config = {
+  darkMode: 'class',
+  theme: {
+    extend: {
+      colors: {
+        'background': '#050505',
+        'on-background': '#F5F7FA',
+        'background-secondary': '#0B0D10',
+        'on-background-secondary': '#F5F7FA',
+        'surface': '#111318',
+        'on-surface': '#F5F7FA',
+        'surface-elevated': '#171A20',
+        'on-surface-elevated': '#F5F7FA',
+        'surface-hover': '#1E222A',
+        'text-secondary': '#9CA3AF',
+        'text-muted': '#828B99',
+        'outline': '#2B303B',
+        'outline-variant': '#1D2028',
+        'primary': '#22D3EE',
+        'on-primary': '#042830',
+        'primary-container': '#0B2933',
+        'on-primary-container': '#67E8F9',
+        'secondary': '#A78BFA',
+        'on-secondary': '#190D33',
+        'secondary-container': '#241942',
+        'on-secondary-container': '#DDD6FE',
+        'success': '#34D399',
+        'on-success': '#04261B',
+        'success-container': '#0A281F',
+        'on-success-container': '#6EE7B7',
+        'warning': '#FBBF24',
+        'on-warning': '#2B1900',
+        'warning-container': '#2B210B',
+        'on-warning-container': '#FDE68A',
+        'error': '#F87171',
+        'on-error': '#2B0909',
+        'error-container': '#2D1215',
+        'on-error-container': '#FCA5A5',
+      },
+      borderRadius: {
+        'sm': '6px',
+        'DEFAULT': '8px',
+        'md': '10px',
+        'lg': '12px',
+        'xl': '16px',
+        'full': '9999px',
+      },
+      spacing: {
+        'gutter-xs': '4px',
+        'gutter-sm': '8px',
+        'gutter-md': '16px',
+        'gutter-lg': '24px',
+        'gutter-xl': '32px',
+        'section': '24px',
+        'page-margin': '24px',
+      },
+      fontFamily: {
+        'display': ['"Alata"', 'sans-serif'],
+        'kpi': ['"Alata"', 'sans-serif'],
+        'headline': ['"Alata"', 'sans-serif'],
+        'title': ['"Instrument Sans"', 'sans-serif'],
+        'body': ['"Instrument Sans"', 'sans-serif'],
+        'label': ['"Instrument Sans"', 'sans-serif'],
+        'mono': ['"Spline Sans Mono"', 'monospace'],
+      },
+      fontSize: {
+        'display-lg': ['40px', { lineHeight: '48px', letterSpacing: '-0.5px', fontWeight: '400' }],
+        'display-lg-mobile': ['28px', { lineHeight: '36px', letterSpacing: '-0.25px', fontWeight: '400' }],
+        'kpi-lg': ['34px', { lineHeight: '40px', letterSpacing: '-0.5px', fontWeight: '400' }],
+        'kpi-lg-mobile': ['26px', { lineHeight: '32px', letterSpacing: '-0.25px', fontWeight: '400' }],
+        'headline-lg': ['24px', { lineHeight: '32px', letterSpacing: '-0.25px', fontWeight: '400' }],
+        'headline-md': ['18px', { lineHeight: '26px', letterSpacing: '-0.15px', fontWeight: '600' }],
+        'title-sm': ['14px', { lineHeight: '20px', letterSpacing: '0px', fontWeight: '600' }],
+        'body-md': ['14px', { lineHeight: '22px', letterSpacing: '0px', fontWeight: '400' }],
+        'body-sm': ['13px', { lineHeight: '18px', letterSpacing: '0px', fontWeight: '400' }],
+        'label-md': ['12px', { lineHeight: '16px', letterSpacing: '0.4px', fontWeight: '500' }],
+        'mono-sm': ['12px', { lineHeight: '16px', letterSpacing: '0px', fontWeight: '400' }],
+      },
+      transitionDuration: {
+        'state-change': '120ms',
+        'surface-enter': '200ms',
+        'surface-exit': '150ms',
+      },
+      transitionDelay: {
+        'state-change': '0ms',
+        'surface-enter': '0ms',
+        'surface-exit': '0ms',
+      },
+      transitionTimingFunction: {
+        'state-change': 'ease-out',
+        'surface-enter': 'cubic-bezier(0.2, 0, 0, 1)',
+        'surface-exit': 'cubic-bezier(0.3, 0, 1, 1)',
+      },
+    },
+  },
+};
+if (typeof module !== 'undefined') module.exports = globalThis.tailwind.config;
+</script>
+  <link href="https://fonts.googleapis.com/css2?family=Alata&amp;family=Instrument+Sans:wght@400;500;600&amp;family=Spline+Sans+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=block" rel="stylesheet">
+  <style>
+    .material-symbols-outlined { display: inline-block; width: 1em; height: 1em; line-height: 1 !important; box-sizing: content-box; overflow: hidden; white-space: nowrap; direction: ltr; vertical-align: middle; }
+    .auth-grid { background-image: radial-gradient(rgba(34,211,238,0.12) 1px, transparent 1px); background-size: 28px 28px; }
+  </style>
+</head>
+<body class="bg-background text-on-background font-body antialiased">
+  <div class="min-h-[1024px] grid grid-cols-1 lg:grid-cols-2 bg-background" data-stitch-vh="min-h-[1024px]===min-h-screen">
+    <!-- Left Visual / Brand Panel -->
+    <div class="hidden lg:flex flex-col justify-between p-12 bg-background-secondary border-r border-outline-variant relative overflow-hidden auth-grid">
+      <div class="flex items-center gap-2.5 z-10">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <rect x="3" y="12" width="5" height="9" rx="1.5" fill="#22D3EE"></rect>
+          <rect x="10" y="7" width="5" height="14" rx="1.5" fill="#A78BFA"></rect>
+          <rect x="17" y="3" width="4" height="18" rx="1.5" fill="#F5F7FA" fill-opacity="0.85"></rect>
+        </svg>
+        <span class="font-title text-headline-md tracking-wide text-on-surface">SOCIALIQ</span>
+      </div>
+
+      <!-- Subtle 3D-inspired layered data node visual -->
+      <div class="my-auto py-8 z-10">
+        <svg viewBox="0 0 420 260" class="w-full max-w-md" aria-hidden="true">
+          <g stroke="#2B303B" stroke-width="1">
+            <line x1="60" y1="190" x2="170" y2="110"></line>
+            <line x1="170" y1="110" x2="290" y2="140"></line>
+            <line x1="290" y1="140" x2="360" y2="60"></line>
+            <line x1="170" y1="110" x2="240" y2="50"></line>
+          </g>
+          <rect x="120" y="80" width="160" height="72" rx="10" fill="#111318" stroke="#2B303B"></rect>
+          <text x="138" y="106" fill="#9CA3AF" font-family="Spline Sans Mono, monospace" font-size="11">AVG ENGAGEMENT</text>
+          <text x="138" y="134" fill="#22D3EE" font-family="Alata, sans-serif" font-size="24">6.84% (+18.4%)</text>
+          <circle cx="60" cy="190" r="5" fill="#A78BFA"></circle>
+          <circle cx="360" cy="60" r="6" fill="#22D3EE"></circle>
+          <circle cx="240" cy="50" r="4" fill="#34D399"></circle>
+        </svg>
+        <h1 class="font-display text-display-lg text-on-surface mt-4">Understand your content.<br>Create what performs.</h1>
+        <p class="font-body text-body-md text-text-secondary mt-3 max-w-md">
+          Data-driven social analytics, statistical correlations, and performance prediction in one minimal workspace.
+        </p>
+      </div>
+
+      <p class="font-mono text-mono-sm text-text-muted z-10">DATA → ANALYSIS → INSIGHT</p>
+    </div>
+
+    <!-- Right Form Panel -->
+    <main class="flex items-center justify-center p-6 sm:p-12">
+      <div class="w-full max-w-sm flex flex-col gap-6">
+        <div class="flex flex-col gap-1">
+          <h2 class="font-headline text-headline-lg text-on-surface">Sign in to SocialIQ</h2>
+          <p class="font-body text-body-sm text-text-secondary">Enter your workspace credentials to continue.</p>
+        </div>
+
+        <form onsubmit="event.preventDefault(); window.location.href=&#39;../dashboard/Dashboard.html&#39;;" class="flex flex-col gap-4">
+          <label class="flex flex-col gap-1.5">
+            <span class="font-label text-label-md text-text-secondary">Email</span>
+            <input type="email" required placeholder="utkarsh@socialiq.app" class="rounded bg-surface-elevated border border-outline px-3 py-2.5 font-body text-body-md text-on-surface placeholder:text-text-muted focus:border-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-primary">
+          </label>
+
+          <label class="flex flex-col gap-1.5">
+            <div class="flex items-center justify-between">
+              <span class="font-label text-label-md text-text-secondary">Password</span>
+              <a href="#" class="font-label text-label-md text-primary hover:underline">Forgot password?</a>
+            </div>
+            <input type="password" required placeholder="••••••••" class="rounded bg-surface-elevated border border-outline px-3 py-2.5 font-body text-body-md text-on-surface placeholder:text-text-muted focus:border-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-primary">
+          </label>
+
+          <button type="submit" class="mt-2 w-full py-2.5 rounded bg-primary text-on-primary font-label text-title-sm hover:bg-on-primary-container transition-colors">
+            Sign In
+          </button>
+        </form>
+
+        <p class="font-body text-body-sm text-text-secondary text-center">
+          New to SocialIQ? <a href="../register/Register.html" class="text-primary hover:underline">Create an account</a>
+        </p>
+      </div>
+    </main>
+  </div>
+
+
+</body></html>

@@ -1,0 +1,471 @@
+import React, { useState, useMemo } from 'react';
+import { mockPosts } from '../data/mockData';
+
+export default function PostsPage() {
+  const [posts, setPosts] = useState(mockPosts);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedPlatform, setSelectedPlatform] = useState('All');
+  const [selectedType, setSelectedType] = useState('All');
+  const [selectedCategory, setSelectedCategory] = useState('All');
+  const [selectedTier, setSelectedTier] = useState('All');
+  const [sortField, setSortField] = useState('views');
+  const [sortAsc, setSortAsc] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+
+  // New post form state
+  const [newPost, setNewPost] = useState({
+    title: '',
+    platform: 'Instagram',
+    content_type: 'Reel',
+    category: 'Travel',
+    views: '',
+    likes: '',
+    comments: '',
+    shares: '',
+    saves: '',
+    reach: '',
+  });
+
+  // Filter & Sort
+  const filteredPosts = useMemo(() => {
+    return posts
+      .filter((post) => {
+        const matchesSearch =
+          post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          post.category.toLowerCase().includes(searchQuery.toLowerCase());
+        const matchesPlatform = selectedPlatform === 'All' || post.platform === selectedPlatform;
+        const matchesType = selectedType === 'All' || post.content_type === selectedType;
+        const matchesCategory = selectedCategory === 'All' || post.category === selectedCategory;
+        const matchesTier = selectedTier === 'All' || post.tier === selectedTier;
+        return matchesSearch && matchesPlatform && matchesType && matchesCategory && matchesTier;
+      })
+      .sort((a, b) => {
+        const factor = sortAsc ? 1 : -1;
+        if (sortField === 'views') return (a.views - b.views) * factor;
+        if (sortField === 'likes') return (a.likes - b.likes) * factor;
+        if (sortField === 'engagement_rate') return (a.engagement_rate - b.engagement_rate) * factor;
+        return 0;
+      });
+  }, [posts, searchQuery, selectedPlatform, selectedType, selectedCategory, selectedTier, sortField, sortAsc]);
+
+  const handleResetFilters = () => {
+    setSearchQuery('');
+    setSelectedPlatform('All');
+    setSelectedType('All');
+    setSelectedCategory('All');
+    setSelectedTier('All');
+  };
+
+  const handleSort = (field) => {
+    if (sortField === field) {
+      setSortAsc(!sortAsc);
+    } else {
+      setSortField(field);
+      setSortAsc(false);
+    }
+  };
+
+  const handleCreatePost = (e) => {
+    e.preventDefault();
+    if (!newPost.title.trim()) return;
+
+    const viewsNum = parseInt(newPost.views, 10) || 0;
+    const likesNum = parseInt(newPost.likes, 10) || 0;
+    const commentsNum = parseInt(newPost.comments, 10) || 0;
+    const sharesNum = parseInt(newPost.shares, 10) || 0;
+    const savesNum = parseInt(newPost.saves, 10) || 0;
+    const reachNum = parseInt(newPost.reach, 10) || viewsNum || 1;
+
+    const totalEng = likesNum + commentsNum + sharesNum + savesNum;
+    const er = parseFloat(((totalEng / reachNum) * 100).toFixed(1));
+
+    let tier = 'Medium';
+    if (er >= 7.0) tier = 'High';
+    else if (er < 4.0) tier = 'Low';
+
+    const created = {
+      id: `P${posts.length + 149}`,
+      title: newPost.title,
+      platform: newPost.platform,
+      content_type: newPost.content_type,
+      category: newPost.category,
+      date: new Date().toISOString().split('T')[0],
+      views: viewsNum,
+      likes: likesNum,
+      comments: commentsNum,
+      shares: sharesNum,
+      saves: savesNum,
+      engagement_rate: er,
+      tier,
+      icon: newPost.content_type === 'Reel' ? 'play_circle' : newPost.content_type === 'Carousel' ? 'view_carousel' : 'videocam',
+      iconColor: newPost.content_type === 'Reel' ? 'text-primary' : 'text-secondary',
+    };
+
+    setPosts([created, ...posts]);
+    setIsAddModalOpen(false);
+    setNewPost({
+      title: '',
+      platform: 'Instagram',
+      content_type: 'Reel',
+      category: 'Travel',
+      views: '',
+      likes: '',
+      comments: '',
+      shares: '',
+      saves: '',
+      reach: '',
+    });
+  };
+
+  return (
+    <main className="flex-1 px-6 py-6 max-w-[1280px] w-full mx-auto flex flex-col gap-6">
+      {/* Page Heading & Add Button */}
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+        <div>
+          <h1 className="font-headline text-headline-lg text-on-surface">Posts</h1>
+          <p className="font-body text-body-md text-text-secondary mt-1">
+            Manage, filter, and track performance of published content.
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={() => setIsAddModalOpen(true)}
+          className="inline-flex items-center gap-2 px-3.5 py-2 rounded bg-primary text-on-primary font-label text-title-sm hover:opacity-95 transition-opacity self-start sm:self-auto shadow-sm"
+        >
+          <span className="material-symbols-outlined text-[18px]">add</span>
+          <span>Add Post</span>
+        </button>
+      </div>
+
+      {/* Filter Bar */}
+      <section className="bg-surface border border-outline-variant rounded-lg p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+        {/* Search */}
+        <div className="relative">
+          <span className="material-symbols-outlined absolute left-3 top-2.5 text-[18px] text-text-muted">search</span>
+          <input
+            type="search"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search posts by title or tag..."
+            className="w-full pl-9 pr-3 py-2 rounded bg-surface-elevated border border-outline text-on-surface font-body text-body-md placeholder:text-text-muted focus:border-primary focus:outline-none"
+          />
+        </div>
+
+        {/* Platform */}
+        <select
+          value={selectedPlatform}
+          onChange={(e) => setSelectedPlatform(e.target.value)}
+          className="w-full px-3 py-2 rounded bg-surface-elevated border border-outline text-on-surface font-body text-body-md focus:border-primary focus:outline-none"
+        >
+          <option value="All">All Platforms</option>
+          <option value="Instagram">Instagram</option>
+          <option value="YouTube">YouTube</option>
+          <option value="LinkedIn">LinkedIn</option>
+        </select>
+
+        {/* Content Type */}
+        <select
+          value={selectedType}
+          onChange={(e) => setSelectedType(e.target.value)}
+          className="w-full px-3 py-2 rounded bg-surface-elevated border border-outline text-on-surface font-body text-body-md focus:border-primary focus:outline-none"
+        >
+          <option value="All">All Types</option>
+          <option value="Reel">Reels</option>
+          <option value="Carousel">Carousels</option>
+          <option value="Video">Videos</option>
+          <option value="Image">Images</option>
+        </select>
+
+        {/* Category */}
+        <select
+          value={selectedCategory}
+          onChange={(e) => setSelectedCategory(e.target.value)}
+          className="w-full px-3 py-2 rounded bg-surface-elevated border border-outline text-on-surface font-body text-body-md focus:border-primary focus:outline-none"
+        >
+          <option value="All">All Categories</option>
+          <option value="Travel">Travel</option>
+          <option value="Tech">Tech</option>
+          <option value="Education">Education</option>
+          <option value="Community">Community</option>
+          <option value="Lifestyle">Lifestyle</option>
+        </select>
+
+        {/* Performance Tier */}
+        <select
+          value={selectedTier}
+          onChange={(e) => setSelectedTier(e.target.value)}
+          className="w-full px-3 py-2 rounded bg-surface-elevated border border-outline text-on-surface font-body text-body-md focus:border-primary focus:outline-none"
+        >
+          <option value="All">All Performance</option>
+          <option value="High">High</option>
+          <option value="Medium">Medium</option>
+          <option value="Low">Low</option>
+        </select>
+      </section>
+
+      {/* Table Section */}
+      {filteredPosts.length > 0 ? (
+        <section className="bg-surface border border-outline-variant rounded-lg overflow-hidden flex flex-col">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="border-b border-outline-variant bg-background-secondary">
+                  <th className="px-5 py-3 font-label text-label-md uppercase tracking-wider text-text-muted">Post</th>
+                  <th className="px-4 py-3 font-label text-label-md uppercase tracking-wider text-text-muted">Platform</th>
+                  <th className="px-4 py-3 font-label text-label-md uppercase tracking-wider text-text-muted">Content Type</th>
+                  <th className="px-4 py-3 font-label text-label-md uppercase tracking-wider text-text-muted">Category</th>
+                  <th className="px-4 py-3 font-label text-label-md uppercase tracking-wider text-text-muted">Date</th>
+                  <th
+                    onClick={() => handleSort('views')}
+                    className="px-4 py-3 font-label text-label-md uppercase tracking-wider text-text-muted text-right cursor-pointer hover:text-on-surface"
+                  >
+                    Views {sortField === 'views' ? (sortAsc ? '↑' : '↓') : ''}
+                  </th>
+                  <th
+                    onClick={() => handleSort('likes')}
+                    className="px-4 py-3 font-label text-label-md uppercase tracking-wider text-text-muted text-right cursor-pointer hover:text-on-surface"
+                  >
+                    Likes {sortField === 'likes' ? (sortAsc ? '↑' : '↓') : ''}
+                  </th>
+                  <th
+                    onClick={() => handleSort('engagement_rate')}
+                    className="px-4 py-3 font-label text-label-md uppercase tracking-wider text-text-muted text-right cursor-pointer hover:text-on-surface"
+                  >
+                    Engagement {sortField === 'engagement_rate' ? (sortAsc ? '↑' : '↓') : ''}
+                  </th>
+                  <th className="px-5 py-3 font-label text-label-md uppercase tracking-wider text-text-muted text-right">Performance</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-outline-variant">
+                {filteredPosts.map((post) => (
+                  <tr key={post.id} className="hover:bg-surface-elevated/40 transition-colors">
+                    <td className="px-5 py-3.5">
+                      <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 rounded bg-surface-elevated border border-outline flex items-center justify-center shrink-0">
+                          <span className={`material-symbols-outlined text-[16px] ${post.iconColor}`}>{post.icon}</span>
+                        </div>
+                        <div className="min-w-0 max-w-[260px]">
+                          <p className="font-title text-body-sm text-on-surface truncate">{post.title}</p>
+                          <span className="font-mono text-mono-sm text-text-muted">{post.id}</span>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-4 py-3.5 font-body text-body-sm text-text-secondary">{post.platform}</td>
+                    <td className="px-4 py-3.5">
+                      <span className="inline-flex px-2 py-0.5 rounded bg-background-secondary border border-outline-variant font-mono text-mono-sm text-text-secondary">
+                        {post.content_type}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3.5 font-body text-body-sm text-text-secondary">{post.category}</td>
+                    <td className="px-4 py-3.5 font-mono text-mono-sm text-text-muted">{post.date}</td>
+                    <td className="px-4 py-3.5 font-mono text-mono-sm text-on-surface text-right tabular-nums">
+                      {post.views.toLocaleString()}
+                    </td>
+                    <td className="px-4 py-3.5 font-mono text-mono-sm text-on-surface text-right tabular-nums">
+                      {post.likes.toLocaleString()}
+                    </td>
+                    <td className="px-4 py-3.5 font-mono text-mono-sm text-right tabular-nums text-success">
+                      {post.engagement_rate}%
+                    </td>
+                    <td className="px-5 py-3.5 text-right">
+                      <span
+                        className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full font-label text-label-md border ${
+                          post.tier === 'High'
+                            ? 'bg-success-container text-on-success-container border-success/20'
+                            : post.tier === 'Medium'
+                            ? 'bg-warning-container text-on-warning-container border-warning/20'
+                            : 'bg-error-container text-on-error-container border-error/20'
+                        }`}
+                      >
+                        {post.tier}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Pagination Controls */}
+          <div className="px-5 py-3 border-t border-outline-variant flex items-center justify-between text-body-sm text-text-secondary">
+            <span className="font-mono text-mono-sm text-text-muted">
+              Showing 1 to {filteredPosts.length} of {posts.length} posts
+            </span>
+            <div className="flex items-center gap-1.5">
+              <button
+                type="button"
+                className="px-2.5 py-1 rounded bg-surface-elevated border border-outline text-text-secondary hover:text-on-surface font-label text-label-md disabled:opacity-50"
+                disabled
+              >
+                Previous
+              </button>
+              <button type="button" className="px-2.5 py-1 rounded bg-primary text-on-primary font-label text-label-md">
+                1
+              </button>
+              <button type="button" className="px-2.5 py-1 rounded bg-surface-elevated border border-outline text-text-secondary hover:text-on-surface font-label text-label-md">
+                2
+              </button>
+              <button type="button" className="px-2.5 py-1 rounded bg-surface-elevated border border-outline text-text-secondary hover:text-on-surface font-label text-label-md">
+                Next
+              </button>
+            </div>
+          </div>
+        </section>
+      ) : (
+        /* Empty State */
+        <section className="bg-surface border border-outline-variant rounded-lg p-12 text-center flex flex-col items-center gap-3">
+          <div className="w-12 h-12 rounded-full bg-surface-elevated border border-outline flex items-center justify-center text-text-muted">
+            <span className="material-symbols-outlined text-[24px]">search_off</span>
+          </div>
+          <h2 className="font-title text-headline-md text-on-surface">No posts match your filters</h2>
+          <p className="font-body text-body-sm text-text-secondary max-w-sm">
+            Try clearing your search query or adjusting the platform and content type filters.
+          </p>
+          <button
+            type="button"
+            onClick={handleResetFilters}
+            className="mt-2 px-4 py-1.5 rounded bg-surface-elevated border border-outline text-primary font-label text-label-md hover:bg-surface-hover"
+          >
+            Reset Filters
+          </button>
+        </section>
+      )}
+
+      {/* Add Post Modal */}
+      {isAddModalOpen && (
+        <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-surface border border-outline rounded-lg p-6 max-w-lg w-full flex flex-col gap-5 shadow-2xl">
+            <div className="flex items-center justify-between border-b border-outline-variant pb-3">
+              <h2 className="font-title text-headline-md text-on-surface">Add New Post</h2>
+              <button
+                type="button"
+                onClick={() => setIsAddModalOpen(false)}
+                className="text-text-muted hover:text-on-surface"
+              >
+                <span className="material-symbols-outlined text-[20px]">close</span>
+              </button>
+            </div>
+
+            <form onSubmit={handleCreatePost} className="flex flex-col gap-4">
+              <label className="flex flex-col gap-1.5">
+                <span className="font-label text-label-md text-text-secondary">Post Title</span>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Kyoto Morning Light — 48h Reel"
+                  value={newPost.title}
+                  onChange={(e) => setNewPost({ ...newPost, title: e.target.value })}
+                  className="rounded bg-surface-elevated border border-outline px-3 py-2 text-on-surface font-body text-body-md focus:border-primary focus:outline-none"
+                />
+              </label>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <label className="flex flex-col gap-1.5">
+                  <span className="font-label text-label-md text-text-secondary">Platform</span>
+                  <select
+                    value={newPost.platform}
+                    onChange={(e) => setNewPost({ ...newPost, platform: e.target.value })}
+                    className="rounded bg-surface-elevated border border-outline px-3 py-2 text-on-surface font-body text-body-md focus:border-primary focus:outline-none"
+                  >
+                    <option value="Instagram">Instagram</option>
+                    <option value="YouTube">YouTube</option>
+                    <option value="LinkedIn">LinkedIn</option>
+                  </select>
+                </label>
+
+                <label className="flex flex-col gap-1.5">
+                  <span className="font-label text-label-md text-text-secondary">Content Type</span>
+                  <select
+                    value={newPost.content_type}
+                    onChange={(e) => setNewPost({ ...newPost, content_type: e.target.value })}
+                    className="rounded bg-surface-elevated border border-outline px-3 py-2 text-on-surface font-body text-body-md focus:border-primary focus:outline-none"
+                  >
+                    <option value="Reel">Reel</option>
+                    <option value="Carousel">Carousel</option>
+                    <option value="Video">Video</option>
+                    <option value="Image">Image</option>
+                  </select>
+                </label>
+
+                <label className="flex flex-col gap-1.5">
+                  <span className="font-label text-label-md text-text-secondary">Category</span>
+                  <select
+                    value={newPost.category}
+                    onChange={(e) => setNewPost({ ...newPost, category: e.target.value })}
+                    className="rounded bg-surface-elevated border border-outline px-3 py-2 text-on-surface font-body text-body-md focus:border-primary focus:outline-none"
+                  >
+                    <option value="Travel">Travel</option>
+                    <option value="Tech">Tech</option>
+                    <option value="Education">Education</option>
+                    <option value="Community">Community</option>
+                    <option value="Lifestyle">Lifestyle</option>
+                  </select>
+                </label>
+              </div>
+
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <label className="flex flex-col gap-1.5">
+                  <span className="font-label text-label-md text-text-secondary">Views</span>
+                  <input
+                    type="number"
+                    placeholder="120000"
+                    value={newPost.views}
+                    onChange={(e) => setNewPost({ ...newPost, views: e.target.value })}
+                    className="rounded bg-surface-elevated border border-outline px-3 py-2 text-on-surface font-body text-body-md focus:border-primary focus:outline-none"
+                  />
+                </label>
+                <label className="flex flex-col gap-1.5">
+                  <span className="font-label text-label-md text-text-secondary">Likes</span>
+                  <input
+                    type="number"
+                    placeholder="8500"
+                    value={newPost.likes}
+                    onChange={(e) => setNewPost({ ...newPost, likes: e.target.value })}
+                    className="rounded bg-surface-elevated border border-outline px-3 py-2 text-on-surface font-body text-body-md focus:border-primary focus:outline-none"
+                  />
+                </label>
+                <label className="flex flex-col gap-1.5">
+                  <span className="font-label text-label-md text-text-secondary">Comments</span>
+                  <input
+                    type="number"
+                    placeholder="320"
+                    value={newPost.comments}
+                    onChange={(e) => setNewPost({ ...newPost, comments: e.target.value })}
+                    className="rounded bg-surface-elevated border border-outline px-3 py-2 text-on-surface font-body text-body-md focus:border-primary focus:outline-none"
+                  />
+                </label>
+                <label className="flex flex-col gap-1.5">
+                  <span className="font-label text-label-md text-text-secondary">Shares</span>
+                  <input
+                    type="number"
+                    placeholder="750"
+                    value={newPost.shares}
+                    onChange={(e) => setNewPost({ ...newPost, shares: e.target.value })}
+                    className="rounded bg-surface-elevated border border-outline px-3 py-2 text-on-surface font-body text-body-md focus:border-primary focus:outline-none"
+                  />
+                </label>
+              </div>
+
+              <div className="flex items-center justify-end gap-3 pt-3 border-t border-outline-variant">
+                <button
+                  type="button"
+                  onClick={() => setIsAddModalOpen(false)}
+                  className="px-4 py-2 rounded bg-surface-elevated border border-outline text-text-secondary hover:text-on-surface font-label text-label-md"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 rounded bg-primary text-on-primary font-label text-label-md font-medium hover:opacity-95"
+                >
+                  Save Post
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+    </main>
+  );
+}

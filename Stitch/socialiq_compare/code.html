@@ -1,0 +1,389 @@
+<!DOCTYPE html><html lang="en"><head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SocialIQ — Compare</title>
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <script id="tailwind-config">/** @type {import('tailwindcss').Config} */
+globalThis.tailwind = globalThis.tailwind || {};
+globalThis.tailwind.config = {
+  darkMode: 'class',
+  theme: {
+    extend: {
+      colors: {
+        'background': '#050505',
+        'on-background': '#F5F7FA',
+        'background-secondary': '#0B0D10',
+        'on-background-secondary': '#F5F7FA',
+        'surface': '#111318',
+        'on-surface': '#F5F7FA',
+        'surface-elevated': '#171A20',
+        'on-surface-elevated': '#F5F7FA',
+        'surface-hover': '#1E222A',
+        'text-secondary': '#9CA3AF',
+        'text-muted': '#828B99',
+        'outline': '#2B303B',
+        'outline-variant': '#1D2028',
+        'primary': '#22D3EE',
+        'on-primary': '#042830',
+        'primary-container': '#0B2933',
+        'on-primary-container': '#67E8F9',
+        'secondary': '#A78BFA',
+        'on-secondary': '#190D33',
+        'secondary-container': '#241942',
+        'on-secondary-container': '#DDD6FE',
+        'success': '#34D399',
+        'on-success': '#04261B',
+        'success-container': '#0A281F',
+        'on-success-container': '#6EE7B7',
+        'warning': '#FBBF24',
+        'on-warning': '#2B1900',
+        'warning-container': '#2B210B',
+        'on-warning-container': '#FDE68A',
+        'error': '#F87171',
+        'on-error': '#2B0909',
+        'error-container': '#2D1215',
+        'on-error-container': '#FCA5A5',
+      },
+      borderRadius: {
+        'sm': '6px',
+        'DEFAULT': '8px',
+        'md': '10px',
+        'lg': '12px',
+        'xl': '16px',
+        'full': '9999px',
+      },
+      spacing: {
+        'gutter-xs': '4px',
+        'gutter-sm': '8px',
+        'gutter-md': '16px',
+        'gutter-lg': '24px',
+        'gutter-xl': '32px',
+        'section': '24px',
+        'page-margin': '24px',
+      },
+      fontFamily: {
+        'display': ['"Alata"', 'sans-serif'],
+        'kpi': ['"Alata"', 'sans-serif'],
+        'headline': ['"Alata"', 'sans-serif'],
+        'title': ['"Instrument Sans"', 'sans-serif'],
+        'body': ['"Instrument Sans"', 'sans-serif'],
+        'label': ['"Instrument Sans"', 'sans-serif'],
+        'mono': ['"Spline Sans Mono"', 'monospace'],
+      },
+      fontSize: {
+        'display-lg': ['40px', { lineHeight: '48px', letterSpacing: '-0.5px', fontWeight: '400' }],
+        'display-lg-mobile': ['28px', { lineHeight: '36px', letterSpacing: '-0.25px', fontWeight: '400' }],
+        'kpi-lg': ['34px', { lineHeight: '40px', letterSpacing: '-0.5px', fontWeight: '400' }],
+        'kpi-lg-mobile': ['26px', { lineHeight: '32px', letterSpacing: '-0.25px', fontWeight: '400' }],
+        'headline-lg': ['24px', { lineHeight: '32px', letterSpacing: '-0.25px', fontWeight: '400' }],
+        'headline-md': ['18px', { lineHeight: '26px', letterSpacing: '-0.15px', fontWeight: '600' }],
+        'title-sm': ['14px', { lineHeight: '20px', letterSpacing: '0px', fontWeight: '600' }],
+        'body-md': ['14px', { lineHeight: '22px', letterSpacing: '0px', fontWeight: '400' }],
+        'body-sm': ['13px', { lineHeight: '18px', letterSpacing: '0px', fontWeight: '400' }],
+        'label-md': ['12px', { lineHeight: '16px', letterSpacing: '0.4px', fontWeight: '500' }],
+        'mono-sm': ['12px', { lineHeight: '16px', letterSpacing: '0px', fontWeight: '400' }],
+      },
+      transitionDuration: {
+        'state-change': '120ms',
+        'surface-enter': '200ms',
+        'surface-exit': '150ms',
+      },
+      transitionDelay: {
+        'state-change': '0ms',
+        'surface-enter': '0ms',
+        'surface-exit': '0ms',
+      },
+      transitionTimingFunction: {
+        'state-change': 'ease-out',
+        'surface-enter': 'cubic-bezier(0.2, 0, 0, 1)',
+        'surface-exit': 'cubic-bezier(0.3, 0, 1, 1)',
+      },
+    },
+  },
+};
+if (typeof module !== 'undefined') module.exports = globalThis.tailwind.config;
+</script>
+  <link href="https://fonts.googleapis.com/css2?family=Alata&amp;family=Instrument+Sans:wght@400;500;600&amp;family=Spline+Sans+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=block" rel="stylesheet">
+  <style>
+    .material-symbols-outlined { display: inline-block; width: 1em; height: 1em; line-height: 1 !important; box-sizing: content-box; overflow: hidden; white-space: nowrap; direction: ltr; vertical-align: middle; }
+  </style>
+</head>
+<body class="bg-background text-on-background font-body antialiased">
+  <div class="min-h-[1024px] flex bg-background text-on-background" data-stitch-vh="min-h-[1024px]===min-h-screen">
+    <!-- Persistent Left Sidebar -->
+    <aside class="w-56 shrink-0 bg-background-secondary border-r border-outline-variant hidden lg:flex flex-col justify-between min-h-[1024px] sticky top-0" data-stitch-vh="min-h-[1024px]===min-h-screen">
+      <div class="p-4 flex flex-col gap-6">
+        <a href="../dashboard/Dashboard.html" class="flex items-center gap-2.5 px-2 py-1">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <rect x="3" y="12" width="5" height="9" rx="1.5" fill="#22D3EE"></rect>
+            <rect x="10" y="7" width="5" height="14" rx="1.5" fill="#A78BFA"></rect>
+            <rect x="17" y="3" width="4" height="18" rx="1.5" fill="#F5F7FA" fill-opacity="0.85"></rect>
+          </svg>
+          <span class="font-title text-headline-md tracking-wide text-on-surface">SOCIALIQ</span>
+        </a>
+
+        <nav aria-label="Primary navigation" class="flex flex-col gap-1">
+          <a href="../dashboard/Dashboard.html" class="flex items-center gap-2.5 px-3 py-1.5 rounded text-text-secondary hover:text-on-surface hover:bg-surface-elevated font-body text-body-md transition-colors duration-state-change">
+            <span class="material-symbols-outlined text-[18px]">grid_view</span>
+            <span>Overview</span>
+          </a>
+          <a href="../posts/Posts.html" class="flex items-center gap-2.5 px-3 py-1.5 rounded text-text-secondary hover:text-on-surface hover:bg-surface-elevated font-body text-body-md transition-colors duration-state-change">
+            <span class="material-symbols-outlined text-[18px]">article</span>
+            <span>Posts</span>
+          </a>
+          <a href="../analytics/Analytics.html" class="flex items-center gap-2.5 px-3 py-1.5 rounded text-text-secondary hover:text-on-surface hover:bg-surface-elevated font-body text-body-md transition-colors duration-state-change">
+            <span class="material-symbols-outlined text-[18px]">bar_chart</span>
+            <span>Analytics</span>
+          </a>
+          <a href="../insights/Insights.html" class="flex items-center gap-2.5 px-3 py-1.5 rounded text-text-secondary hover:text-on-surface hover:bg-surface-elevated font-body text-body-md transition-colors duration-state-change">
+            <span class="material-symbols-outlined text-[18px]">lightbulb</span>
+            <span>Insights</span>
+          </a>
+          <a href="../prediction/Prediction.html" class="flex items-center gap-2.5 px-3 py-1.5 rounded text-text-secondary hover:text-on-surface hover:bg-surface-elevated font-body text-body-md transition-colors duration-state-change">
+            <span class="material-symbols-outlined text-[18px]">online_prediction</span>
+            <span>Prediction</span>
+          </a>
+          <a href="../compare/Compare.html" aria-current="page" class="flex items-center gap-2.5 px-3 py-1.5 rounded bg-surface-elevated text-on-surface border border-outline font-label text-title-sm transition-colors duration-state-change">
+            <span class="material-symbols-outlined text-[18px]">compare_arrows</span>
+            <span>Compare</span>
+          </a>
+          <a href="../upload/Upload.html" class="flex items-center gap-2.5 px-3 py-1.5 rounded text-text-secondary hover:text-on-surface hover:bg-surface-elevated font-body text-body-md transition-colors duration-state-change">
+            <span class="material-symbols-outlined text-[18px]">upload_file</span>
+            <span>Upload</span>
+          </a>
+        </nav>
+      </div>
+
+      <div class="p-4 border-t border-outline-variant flex flex-col gap-2">
+        <a href="../settings/Settings.html" class="flex items-center gap-2.5 px-3 py-1.5 rounded text-text-secondary hover:text-on-surface hover:bg-surface-elevated font-body text-body-md transition-colors duration-state-change">
+          <span class="material-symbols-outlined text-[18px]">settings</span>
+          <span>Settings</span>
+        </a>
+        <a href="../settings/Settings.html" class="flex items-center gap-2.5 px-2.5 py-2 rounded-md bg-surface border border-outline-variant hover:border-outline transition-colors duration-state-change">
+          <span class="w-7 h-7 rounded-full bg-primary-container text-on-primary-container font-title text-label-md flex items-center justify-center shrink-0">U</span>
+          <div class="min-w-0">
+            <p class="font-title text-body-sm text-on-surface truncate">Utkarsh</p>
+            <p class="font-mono text-mono-sm text-text-muted truncate">Creator Pro</p>
+          </div>
+        </a>
+      </div>
+    </aside>
+
+    <!-- Main Column -->
+    <div class="flex-1 flex flex-col min-w-0">
+      <!-- Compact Sticky Top Header -->
+      <header class="h-14 sticky top-0 z-20 bg-background border-b border-outline-variant px-6 flex items-center justify-between gap-4">
+        <div class="flex items-center gap-3">
+          <button type="button" aria-label="Open navigation" class="lg:hidden inline-flex items-center justify-center w-8 h-8 rounded bg-surface border border-outline-variant text-text-secondary">
+            <span class="material-symbols-outlined text-[18px]">menu</span>
+          </button>
+          <div class="flex items-center gap-2">
+            <span class="font-mono text-mono-sm text-text-muted">Workspace</span>
+            <span class="text-text-muted">/</span>
+            <span class="font-title text-body-sm text-on-surface">Utkarsh Studio</span>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-3">
+          <button type="button" class="inline-flex items-center gap-2 px-3 py-1.5 rounded bg-surface border border-outline-variant hover:border-outline text-text-secondary hover:text-on-surface font-body text-body-sm transition-colors duration-state-change">
+            <span class="material-symbols-outlined text-[16px] text-primary">calendar_today</span>
+            <span class="tabular-nums whitespace-nowrap">Nov 1 – 27</span>
+            <span class="material-symbols-outlined text-[16px]">expand_more</span>
+          </button>
+          <button data-component-id="button-icon" data-component-type="button" data-component-variant="icon" type="button" aria-label="Notifications" class="relative inline-flex items-center justify-center w-9 h-9 rounded bg-surface text-text-secondary border border-outline-variant hover:bg-surface-elevated hover:text-on-surface transition-colors duration-state-change">
+            <span class="material-symbols-outlined text-[18px]">notifications</span>
+            <span class="absolute top-2 right-2 w-1.5 h-1.5 rounded-full bg-primary"></span>
+          </button>
+          <a href="../settings/Settings.html" aria-label="Profile settings" class="w-8 h-8 rounded-full bg-surface-elevated border border-outline flex items-center justify-center font-title text-label-md text-on-surface">U</a>
+        </div>
+      </header>
+
+      <!-- Scrollable Content -->
+      <main class="flex-1 px-6 py-6 max-w-[1280px] w-full mx-auto flex flex-col gap-6">
+        <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+          <div>
+            <h1 class="font-headline text-headline-lg text-on-surface">Compare Performance</h1>
+            <p class="font-body text-body-md text-text-secondary mt-1">Side-by-side benchmark across time periods or content formats.</p>
+          </div>
+          <div class="inline-flex p-1 rounded bg-surface border border-outline-variant self-start">
+            <button type="button" onclick="setCompareMode(&#39;period&#39;, this)" class="cmp-tab px-3 py-1 rounded-sm bg-surface-elevated text-primary font-label text-label-md">Periods</button>
+            <button type="button" onclick="setCompareMode(&#39;type&#39;, this)" class="cmp-tab px-3 py-1 rounded-sm text-text-secondary hover:text-on-surface font-label text-label-md">Content Types</button>
+          </div>
+        </div>
+
+        <!-- Selector Bar -->
+        <section class="bg-surface border border-outline-variant rounded-lg p-4 grid grid-cols-1 md:grid-cols-11 gap-4 items-center">
+          <div class="md:col-span-5 flex flex-col gap-1.5">
+            <span class="font-label text-label-md uppercase tracking-wider text-primary" id="label-a">Period A (Primary)</span>
+            <select id="select-a" class="rounded bg-surface-elevated border border-outline px-3 py-2 font-body text-body-md text-on-surface focus:border-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-primary">
+              <option>November 2026</option>
+              <option>October 2026</option>
+              <option>September 2026</option>
+            </select>
+          </div>
+          <div class="md:col-span-1 flex items-center justify-center pt-4 md:pt-5">
+            <span class="w-8 h-8 rounded-full bg-surface-elevated border border-outline flex items-center justify-center font-mono text-mono-sm text-text-muted">vs</span>
+          </div>
+          <div class="md:col-span-5 flex flex-col gap-1.5">
+            <span class="font-label text-label-md uppercase tracking-wider text-secondary" id="label-b">Period B (Baseline)</span>
+            <select id="select-b" class="rounded bg-surface-elevated border border-outline px-3 py-2 font-body text-body-md text-on-surface focus:border-secondary focus:outline-none focus-visible:ring-2 focus-visible:ring-primary">
+              <option>October 2026</option>
+              <option>September 2026</option>
+              <option>August 2026</option>
+            </select>
+          </div>
+        </section>
+
+        <!-- Hero Delta Cards -->
+        <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 items-stretch">
+          <article class="bg-surface border border-outline-variant rounded-lg p-5 flex flex-col gap-3">
+            <div class="flex items-center justify-between">
+              <span class="font-label text-label-md uppercase tracking-wider text-text-secondary">Views</span>
+              <span class="font-mono text-mono-sm text-success tabular-nums">+41.2%</span>
+            </div>
+            <div class="flex items-baseline justify-between">
+              <div>
+                <p class="font-mono text-mono-sm text-primary" id="cmp-a-name">NOVEMBER</p>
+                <p class="font-kpi text-kpi-lg text-on-surface tabular-nums">2.40M</p>
+              </div>
+              <div class="text-right">
+                <p class="font-mono text-mono-sm text-secondary" id="cmp-b-name">OCTOBER</p>
+                <p class="font-title text-headline-md text-text-secondary tabular-nums">1.70M</p>
+              </div>
+            </div>
+            <div class="flex flex-col gap-1.5 pt-2">
+              <div class="h-2 rounded-full bg-primary" style="width: 92%"></div>
+              <div class="h-2 rounded-full bg-secondary/70" style="width: 65%"></div>
+            </div>
+          </article>
+
+          <article class="bg-surface border border-outline-variant rounded-lg p-5 flex flex-col gap-3">
+            <div class="flex items-center justify-between">
+              <span class="font-label text-label-md uppercase tracking-wider text-text-secondary">Reach</span>
+              <span class="font-mono text-mono-sm text-success tabular-nums">+34.8%</span>
+            </div>
+            <div class="flex items-baseline justify-between">
+              <div>
+                <p class="font-mono text-mono-sm text-primary">NOVEMBER</p>
+                <p class="font-kpi text-kpi-lg text-on-surface tabular-nums">1.98M</p>
+              </div>
+              <div class="text-right">
+                <p class="font-mono text-mono-sm text-secondary">OCTOBER</p>
+                <p class="font-title text-headline-md text-text-secondary tabular-nums">1.47M</p>
+              </div>
+            </div>
+            <div class="flex flex-col gap-1.5 pt-2">
+              <div class="h-2 rounded-full bg-primary" style="width: 88%"></div>
+              <div class="h-2 rounded-full bg-secondary/70" style="width: 65%"></div>
+            </div>
+          </article>
+
+          <article class="bg-surface border border-outline-variant rounded-lg p-5 flex flex-col gap-3">
+            <div class="flex items-center justify-between">
+              <span class="font-label text-label-md uppercase tracking-wider text-text-secondary">Engagement Rate</span>
+              <span class="font-mono text-mono-sm text-success tabular-nums">+1.1%</span>
+            </div>
+            <div class="flex items-baseline justify-between">
+              <div>
+                <p class="font-mono text-mono-sm text-primary">NOVEMBER</p>
+                <p class="font-kpi text-kpi-lg text-on-surface tabular-nums">6.84%</p>
+              </div>
+              <div class="text-right">
+                <p class="font-mono text-mono-sm text-secondary">OCTOBER</p>
+                <p class="font-title text-headline-md text-text-secondary tabular-nums">5.74%</p>
+              </div>
+            </div>
+            <div class="flex flex-col gap-1.5 pt-2">
+              <div class="h-2 rounded-full bg-primary" style="width: 82%"></div>
+              <div class="h-2 rounded-full bg-secondary/70" style="width: 69%"></div>
+            </div>
+          </article>
+        </section>
+
+        <!-- Detailed Comparison Table -->
+        <section class="bg-surface border border-outline-variant rounded-lg overflow-hidden">
+          <div class="px-5 py-4 border-b border-outline-variant">
+            <h2 class="font-title text-headline-md text-on-surface">Full Metric Breakdown</h2>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+              <thead>
+                <tr class="border-b border-outline-variant bg-background-secondary">
+                  <th class="px-5 py-3 font-label text-label-md uppercase tracking-wider text-text-muted">Metric</th>
+                  <th class="px-5 py-3 font-label text-label-md uppercase tracking-wider text-primary text-right">November 2026 (A)</th>
+                  <th class="px-5 py-3 font-label text-label-md uppercase tracking-wider text-secondary text-right">October 2026 (B)</th>
+                  <th class="px-5 py-3 font-label text-label-md uppercase tracking-wider text-text-muted text-right">Delta</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-outline-variant font-mono text-mono-sm tabular-nums">
+                <tr class="hover:bg-surface-elevated">
+                  <td class="px-5 py-3 font-title text-title-sm text-on-surface font-body">Total Views</td>
+                  <td class="px-5 py-3 text-right text-on-surface">2,402,100</td>
+                  <td class="px-5 py-3 text-right text-text-secondary">1,701,200</td>
+                  <td class="px-5 py-3 text-right text-success">+41.2%</td>
+                </tr>
+                <tr class="hover:bg-surface-elevated">
+                  <td class="px-5 py-3 font-title text-title-sm text-on-surface font-body">Total Reach</td>
+                  <td class="px-5 py-3 text-right text-on-surface">1,984,500</td>
+                  <td class="px-5 py-3 text-right text-text-secondary">1,472,100</td>
+                  <td class="px-5 py-3 text-right text-success">+34.8%</td>
+                </tr>
+                <tr class="hover:bg-surface-elevated">
+                  <td class="px-5 py-3 font-title text-title-sm text-on-surface font-body">Total Likes</td>
+                  <td class="px-5 py-3 text-right text-on-surface">164,820</td>
+                  <td class="px-5 py-3 text-right text-text-secondary">129,400</td>
+                  <td class="px-5 py-3 text-right text-success">+27.4%</td>
+                </tr>
+                <tr class="hover:bg-surface-elevated">
+                  <td class="px-5 py-3 font-title text-title-sm text-on-surface font-body">Total Shares</td>
+                  <td class="px-5 py-3 text-right text-on-surface">28,940</td>
+                  <td class="px-5 py-3 text-right text-text-secondary">19,820</td>
+                  <td class="px-5 py-3 text-right text-success">+46.0%</td>
+                </tr>
+                <tr class="hover:bg-surface-elevated">
+                  <td class="px-5 py-3 font-title text-title-sm text-on-surface font-body">Engagement Rate</td>
+                  <td class="px-5 py-3 text-right text-on-surface">6.84%</td>
+                  <td class="px-5 py-3 text-right text-text-secondary">5.74%</td>
+                  <td class="px-5 py-3 text-right text-success">+1.10%</td>
+                </tr>
+                <tr class="hover:bg-surface-elevated">
+                  <td class="px-5 py-3 font-title text-title-sm text-on-surface font-body">Average Performance Score</td>
+                  <td class="px-5 py-3 text-right text-on-surface">81 / 100</td>
+                  <td class="px-5 py-3 text-right text-text-secondary">73 / 100</td>
+                  <td class="px-5 py-3 text-right text-success">+10.9%</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <script>
+    function setCompareMode(mode, btn) {
+      document.querySelectorAll('.cmp-tab').forEach(t => {
+        t.className = 'cmp-tab px-3 py-1 rounded-sm text-text-secondary hover:text-on-surface font-label text-label-md';
+      });
+      btn.className = 'cmp-tab px-3 py-1 rounded-sm bg-surface-elevated text-primary font-label text-label-md';
+      const labelA = document.getElementById('label-a');
+      const labelB = document.getElementById('label-b');
+      const selA = document.getElementById('select-a');
+      const selB = document.getElementById('select-b');
+      if (mode === 'type') {
+        labelA.textContent = 'Content Type A';
+        labelB.textContent = 'Content Type B';
+        selA.innerHTML = '<option>Reels</option><option>Carousels</option><option>Videos</option>';
+        selB.innerHTML = '<option>Images</option><option>Videos</option><option>Carousels</option>';
+      } else {
+        labelA.textContent = 'Period A (Primary)';
+        labelB.textContent = 'Period B (Baseline)';
+        selA.innerHTML = '<option>November 2026</option><option>October 2026</option>';
+        selB.innerHTML = '<option>October 2026</option><option>September 2026</option>';
+      }
+    }
+  </script>
+
+
+</body></html>
