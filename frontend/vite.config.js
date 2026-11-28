@@ -8,6 +8,11 @@ export default defineConfig(({ mode }) => {
 
   return {
     plugins: [react()],
+    // The 3D libraries are only reached through a lazy import; pre-bundle them at startup so
+    // Vite never re-optimizes mid-session (which loads a second React copy → invalid hook call)
+    optimizeDeps: {
+      include: ['three', '@react-three/fiber'],
+    },
     server: {
       port: 5173,
       proxy: {
@@ -18,6 +23,9 @@ export default defineConfig(({ mode }) => {
       },
     },
     build: {
+      // The lazily loaded landing-page 3D chunk (three.js) is ~850 kB raw / ~230 kB gzip by design;
+      // it is never loaded by the app pages
+      chunkSizeWarningLimit: 900,
       rollupOptions: {
         output: {
           manualChunks: {

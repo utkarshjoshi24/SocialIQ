@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { analyticsService } from '../services/api';
+import TiltCard from '../components/TiltCard';
 
 const categories = ['All', 'Performance', 'Content', 'Platform', 'Timing', 'Category', 'Engagement'];
 
@@ -198,9 +199,9 @@ export default function InsightsPage() {
           {filteredInsights.map((insight) => {
             const style = SEVERITY_STYLES[insight.severity] || SEVERITY_STYLES.neutral;
             return (
-              <article
+              <TiltCard
                 key={insight.id}
-                className="bg-surface border border-outline-variant rounded-lg p-5 flex flex-col justify-between gap-4 hover:border-outline transition-colors"
+                className="bg-surface border border-outline-variant rounded-lg p-5 flex flex-col justify-between gap-4 hover:border-outline"
               >
                 <div className="flex flex-col gap-2.5">
                   <div className="flex items-center justify-between">
@@ -229,7 +230,7 @@ export default function InsightsPage() {
                     <span className="font-mono text-mono-sm text-text-muted">n = {insight.sampleSize}</span>
                   </div>
                 </div>
-              </article>
+              </TiltCard>
             );
           })}
         </section>

@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { analyticsService } from '../services/api';
+import TiltCard from '../components/TiltCard';
 
 // Comparison types; `noun` is used in selector labels ("Period A (Baseline)")
 const MODES = [
@@ -358,7 +359,7 @@ export default function ComparePage() {
               const b = Number(m?.b) || 0;
               const share = a + b > 0 ? (a / (a + b)) * 100 : 50;
               return (
-                <article key={key} className="bg-surface border border-outline-variant rounded-lg p-5 flex flex-col gap-3">
+                <TiltCard key={key} className="bg-surface border border-outline-variant rounded-lg p-5 flex flex-col gap-3">
                   <div className="flex items-center justify-between">
                     <span className="font-label text-label-md uppercase tracking-wider text-text-secondary">{title}</span>
                     <span
@@ -395,7 +396,7 @@ export default function ComparePage() {
                       )}
                     </div>
                   </div>
-                </article>
+                </TiltCard>
               );
             })}
           </section>

@@ -9,6 +9,7 @@ import {
   Tooltip,
 } from 'recharts';
 import { analyticsService } from '../services/api';
+import TiltCard from '../components/TiltCard';
 import { useAuth } from '../context/AuthContext';
 
 export default function DashboardPage() {
@@ -199,9 +200,9 @@ export default function DashboardPage() {
       {/* 4 Primary KPI Cards */}
       <section aria-label="Key Performance Indicators" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 items-stretch">
         {kpiCards.map((kpi, idx) => (
-          <article
+          <TiltCard
             key={idx}
-            className="bg-surface border border-outline-variant rounded-lg p-5 kpi-depth flex flex-col justify-between gap-3 hover:border-outline transition-colors"
+            className="bg-surface border border-outline-variant rounded-lg p-5 kpi-depth flex flex-col justify-between gap-3 hover:border-outline"
           >
             <header className="flex items-center justify-between">
               <h2 className="font-label text-label-md uppercase tracking-wider text-text-secondary">{kpi.label}</h2>
@@ -213,14 +214,14 @@ export default function DashboardPage() {
                 <span className="font-mono text-mono-sm text-text-muted tabular-nums">{kpi.caption}</span>
               )}
             </div>
-          </article>
+          </TiltCard>
         ))}
       </section>
 
       {/* Main Charts Row */}
       <section className="grid grid-cols-1 xl:grid-cols-3 gap-4 items-stretch">
         {/* Performance Overview (2 cols) */}
-        <div className="xl:col-span-2 bg-surface border border-outline-variant rounded-lg p-5 kpi-depth flex flex-col justify-between gap-4">
+        <div className="xl:col-span-2 bg-surface border border-outline-variant rounded-lg p-5 kpi-depth depth-hover flex flex-col justify-between gap-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
               <h2 className="font-title text-headline-md text-on-surface">Performance Overview</h2>
@@ -310,7 +311,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Content Performance (1 col) */}
-        <div className="bg-surface border border-outline-variant rounded-lg p-5 kpi-depth flex flex-col justify-between gap-4">
+        <div className="bg-surface border border-outline-variant rounded-lg p-5 kpi-depth depth-hover flex flex-col justify-between gap-4">
           <div>
             <h2 className="font-title text-headline-md text-on-surface">Content Performance</h2>
             <p className="font-body text-body-sm text-text-secondary">Average views per format</p>
