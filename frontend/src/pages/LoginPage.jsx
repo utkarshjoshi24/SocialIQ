@@ -86,12 +86,8 @@ export default function LoginPage() {
             </label>
 
             <label className="flex flex-col gap-1.5">
-              <div className="flex items-center justify-between">
-                <span className="font-label text-label-md text-text-secondary">Password</span>
-                <a href="#forgot" className="font-label text-label-md text-primary hover:underline">
-                  Forgot password?
-                </a>
-              </div>
+              {/* No password-reset flow exists, so the Stitch "Forgot password?" link is omitted */}
+              <span className="font-label text-label-md text-text-secondary">Password</span>
               <input
                 type="password"
                 required
@@ -102,15 +98,7 @@ export default function LoginPage() {
               />
             </label>
 
-            <label className="flex items-center gap-2 cursor-pointer pt-1">
-              <input
-                type="checkbox"
-                defaultChecked
-                className="rounded bg-surface-elevated border border-outline text-primary focus:ring-primary w-4 h-4"
-              />
-              <span className="font-body text-body-sm text-text-secondary">Remember me for 30 days</span>
-            </label>
-
+            {/* "Remember me for 30 days" removed: sessions always last JWT_EXPIRES_IN (7 days by default) */}
             <button
               type="submit"
               disabled={isSubmitting}

@@ -182,14 +182,14 @@ export default function SettingsPage() {
       </section>
 
       {/* Account Section */}
-      <section className="bg-surface border border-outline-variant rounded-lg p-6 flex items-center justify-between gap-4">
-        <div>
+      <section className="bg-surface border border-outline-variant rounded-lg p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="min-w-0">
           <h2 className="font-title text-headline-md text-on-surface">Account</h2>
-          <p className="font-body text-body-sm text-text-secondary mt-0.5">
+          <p className="font-body text-body-sm text-text-secondary mt-0.5 break-all">
             User ID: <span className="font-mono text-xs">{user?._id || '—'}</span>
           </p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           {user?.createdAt && (
             <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded bg-primary-container text-on-primary-container border border-primary/20 font-label text-label-md">
               Member since {new Date(user.createdAt).toLocaleDateString(undefined, { month: 'short', year: 'numeric' })}
@@ -206,7 +206,7 @@ export default function SettingsPage() {
       </section>
 
       {/* Appearance Section */}
-      <section className="bg-surface border border-outline-variant rounded-lg p-6 flex items-center justify-between gap-4">
+      <section className="bg-surface border border-outline-variant rounded-lg p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h2 className="font-title text-headline-md text-on-surface">Appearance</h2>
           <p className="font-body text-body-sm text-text-secondary mt-0.5">SocialIQ is dark-first by default.</p>

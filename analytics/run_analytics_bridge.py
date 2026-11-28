@@ -100,8 +100,7 @@ def compute_format_performance(content_analysis: List[Dict[str, Any]]) -> List[D
     for idx, c in enumerate(content_analysis):
         style = color_palette[idx % len(color_palette)]
         avg_views = c.get('average_views', 0)
-        pct = int(round((avg_views / max_views) * 100))
-        pct = max(10, min(100, pct))
+        pct = max(10, min(100, int(round((avg_views / max_views) * 100)))) if avg_views > 0 else 0
         
         results.append({
             'format': c.get('content_type', 'Unknown'),
@@ -271,8 +270,8 @@ def compute_formatted_day_analysis(day_res: List[Dict[str, Any]]) -> List[Dict[s
     formatted = []
     for d in day_res:
         count = d.get('post_count', 0)
-        pct = int(round((count / max_count) * 100)) if count > 0 else 10
-        pct = max(10, min(100, pct))
+        # Days with no posts get no bar; others keep a 10% minimum so small counts stay visible
+        pct = max(10, min(100, int(round((count / max_count) * 100)))) if count > 0 else 0
         formatted.append({
             'day': d.get('day_short', d.get('day', '')[:3]),
             'fullDay': d.get('day', ''),
@@ -294,8 +293,8 @@ def compute_formatted_content_analysis(content_res: List[Dict[str, Any]]) -> Lis
     formatted = []
     for c in content_res:
         eng = c.get('average_engagement_rate', 0)
-        width_pct = int(round((eng / max_eng) * 100)) if eng > 0 else 10
-        width_pct = max(10, min(100, width_pct))
+        # A zero value gets no bar instead of a misleading 10% one
+        width_pct = max(10, min(100, int(round((eng / max_eng) * 100)))) if eng > 0 else 0
         formatted.append({
             'format': c.get('content_type', 'Unknown'),
             'avgEng': f"{eng}%",
@@ -316,8 +315,7 @@ def compute_formatted_category_analysis(cat_res: List[Dict[str, Any]]) -> List[D
     formatted = []
     for c in cat_res:
         views = c.get('average_views', 0)
-        width_pct = int(round((views / max_views) * 100)) if views > 0 else 10
-        width_pct = max(10, min(100, width_pct))
+        width_pct = max(10, min(100, int(round((views / max_views) * 100)))) if views > 0 else 0
         formatted.append({
             'category': c.get('category', 'Unknown'),
             'avgViews': format_number(views),

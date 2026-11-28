@@ -18,32 +18,45 @@ SocialIQ/
 └── README.md        # Project overview & documentation
 ```
 
-## Quick Start (Phase 1 Baseline)
+## Quick Start
 
-### 1. Backend (Node.js + Express)
-```bash
-cd backend
-cp .env.example .env
-npm install
-npm run dev
-```
-Health check endpoint: `GET http://localhost:5000/api/health`
+Requires Node.js 18+, Python 3.10+ and a running MongoDB (local or Atlas).
 
-### 2. Frontend (React + Vite + Tailwind CSS)
-```bash
-cd frontend
-cp .env.example .env
-npm install
-npm run dev
-```
-Local dev server runs at: `http://localhost:5173`
-
-### 3. Analytics & ML Service (Python)
+### 1. Analytics & ML Service (Python + Flask)
 ```bash
 cd analytics
 python3 -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
+python app.py            # ML prediction API on http://127.0.0.1:5002
+```
+
+### 2. Backend (Node.js + Express)
+```bash
+cd backend
+cp .env.example .env     # set JWT_SECRET (32+ chars) to keep sessions across restarts
+npm install
+npm run dev
+```
+Health check endpoint: `GET http://localhost:5050/api/health`
+
+### 3. Frontend (React + Vite + Tailwind CSS)
+```bash
+cd frontend
+npm install
+npm run dev
+```
+Local dev server runs at `http://localhost:5173` and proxies `/api` to the backend on port 5050.
+
+## Testing
+
+```bash
+# Python analytics, insights, compare and ML API unit tests
+cd analytics && ./venv/bin/python -m unittest test_analytics test_insights test_compare test_prediction_api
+
+# End-to-end API suite (needs all three services running against a THROWAWAY database,
+# e.g. MONGODB_URI=mongodb://localhost:27017/socialiq_test, and the backend's JWT_SECRET)
+JWT_SECRET=<backend secret> MONGO_DB=socialiq_test python3 tests/api_test.py
 ```
 
 ## Approved Visual Design System

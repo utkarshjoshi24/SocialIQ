@@ -54,7 +54,10 @@ export const uploadCSV = async (req, res) => {
     if (csvContent.includes('\u0000')) {
       return res.status(400).json({ error: 'The uploaded file is not a text CSV file' });
     }
-    const { headers, rows } = parseCSV(csvContent);
+    const { headers, rows, error: parseError } = parseCSV(csvContent);
+    if (parseError) {
+      return res.status(400).json({ error: parseError });
+    }
 
     if (!headers || headers.length === 0 || !rows || rows.length === 0) {
       return res.status(400).json({ error: 'The uploaded CSV file is empty or corrupted' });
