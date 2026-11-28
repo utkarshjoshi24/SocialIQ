@@ -6,8 +6,8 @@ This module provides data cleaning, descriptive statistics, aggregation algorith
 
 ```
 analytics/
-├── models/             # Directory for serialized ML models (model.joblib)
-├── services/           # Flask API endpoints and service orchestration
+├── models/             # Directory for trained model artifacts (model.pkl, thresholds.json, metrics.json)
+├── app.py              # Flask prediction API (POST /predict)
 ├── preprocessing.py    # CSV cleaning, validation, and feature derivation
 ├── analytics.py        # Statistics, aggregations, correlation matrix
 ├── train_model.py      # Scikit-learn model training pipeline (Decision Tree)
@@ -51,8 +51,34 @@ pip install -r requirements.txt
 3. **`train_model.py`**:
    - Prepares feature matrices and performance target classes (High, Medium, Low).
    - Trains Decision Tree classifier with Scikit-learn.
-   - Evaluates accuracy and exports serialized artifact to `models/model.joblib`.
+   - Evaluates accuracy and exports serialized artifact to `models/model.pkl`.
 
 4. **`predict.py`**:
    - Loads serialized model and encodes input features (platform, format, duration, tags, hour, day).
    - Returns predicted performance tier, confidence score (0–100), and feature impact notes.
+
+## Prediction API (Flask)
+
+```bash
+./venv/bin/python app.py            # http://127.0.0.1:5002 (FLASK_HOST / FLASK_PORT)
+./venv/bin/python -m unittest test_prediction_api
+```
+
+`POST /predict` accepts only pre-publication features (camelCase):
+`platform`, `contentType`, `category`, `captionLength`, `hashtagsCount`,
+`durationSeconds`, `postingHour`, `dayOfWeek`. Outcome metrics (views, likes,
+comments, shares, saves, reach, engagementRate) are rejected to prevent leakage.
+Categorical values must be ones the model was trained on (case-insensitive;
+`Twitter/X` maps to `Twitter`).
+
+```json
+{ "prediction": "High", "score": 85, "model": "Decision Tree Classifier",
+  "message": "These characteristics historically align with high-performing posts." }
+```
+
+**score** is a relative performance score (5–99): the tier values Low=20,
+Medium=55, High=85 weighted by the class proportions of the training samples in
+the decision-tree leaf the input falls into. It is **not** a calibrated probability.
+
+The Node backend exposes this to the frontend as authenticated
+`POST /api/prediction`, forwarding to `FLASK_ANALYTICS_URL`.

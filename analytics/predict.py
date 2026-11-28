@@ -81,6 +81,19 @@ class PerformancePredictor:
         if not self._loaded:
             self.load()
 
+    def feature_categories(self) -> dict:
+        """
+        Category values the trained OneHotEncoder knows, keyed by feature name.
+        Values outside these are silently encoded as all-zeros (handle_unknown='ignore'),
+        so callers should validate against them before predicting.
+        """
+        self._ensure_loaded()
+        encoder = self.pipeline.named_steps['preprocessor'].named_transformers_['cat']
+        return {
+            col: [str(v) for v in cats]
+            for col, cats in zip(FEATURE_COLS_CATEGORICAL, encoder.categories_)
+        }
+
     # -----------------------------------------------------------------
     # Single prediction
     # -----------------------------------------------------------------
