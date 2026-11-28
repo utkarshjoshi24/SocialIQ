@@ -31,6 +31,8 @@ USAGE:
 import os
 import sys
 import json
+import hashlib
+import platform
 import joblib
 import numpy as np
 import pandas as pd
@@ -93,8 +95,44 @@ def load_training_data() -> pd.DataFrame:
         csv_path = save_csv(csv_path)
 
     df = pd.read_csv(csv_path)
+    df.attrs['source_path'] = csv_path
     print(f"[ML] Loaded {len(df)} records from {csv_path}")
     return df
+
+
+def _sha256(path: str) -> str:
+    digest = hashlib.sha256()
+    with open(path, 'rb') as f:
+        for block in iter(lambda: f.read(65536), b''):
+            digest.update(block)
+    return digest.hexdigest()
+
+
+def build_model_info(df: pd.DataFrame) -> dict:
+    """
+    Provenance saved with the model so a prediction can be traced to the exact
+    artifact, data and library versions. model_version is the first 12 hex
+    characters of model.pkl's SHA-256 (no timestamps, so retraining with the
+    same data and libraries reproduces the same version).
+    """
+    import numpy
+    import sklearn
+    source = df.attrs.get('source_path')
+    return {
+        'model_version': _sha256(MODEL_PATH)[:12],
+        'dataset': {
+            'file': os.path.basename(source) if source else None,
+            'rows': int(len(df)),
+            'sha256': _sha256(source) if source and os.path.isfile(source) else None,
+        },
+        'environment': {
+            'python': platform.python_version(),
+            'scikit_learn': sklearn.__version__,
+            'pandas': pd.__version__,
+            'numpy': numpy.__version__,
+            'joblib': joblib.__version__,
+        },
+    }
 
 
 # ---------------------------------------------------------------------------
@@ -422,6 +460,7 @@ def main():
     # Save metrics
     full_metrics = {
         'model': 'DecisionTreeClassifier',
+        'model_info': build_model_info(df),
         'features': ALL_FEATURES,
         'target': TARGET_COL,
         'random_state': RANDOM_STATE,

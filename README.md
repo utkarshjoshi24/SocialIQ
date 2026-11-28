@@ -20,7 +20,7 @@ SocialIQ/
 
 ## Quick Start
 
-Requires Node.js 18+, Python 3.10+ and a running MongoDB (local or Atlas).
+Requires Node.js 18+, Python 3.11+ (tested on 3.13) and a running MongoDB (local or Atlas).
 
 ### 1. Analytics & ML Service (Python + Flask)
 ```bash
@@ -58,6 +58,28 @@ cd analytics && ./venv/bin/python -m unittest test_analytics test_insights test_
 # e.g. MONGODB_URI=mongodb://localhost:27017/socialiq_test, and the backend's JWT_SECRET)
 JWT_SECRET=<backend secret> MONGO_DB=socialiq_test python3 tests/api_test.py
 ```
+
+## API Reference
+
+All `/api` routes except health, register and login require `Authorization: Bearer <token>`.
+The implemented API consolidates the per-section analytics endpoints sketched in
+`docs/04_SocialIQ_Database_API.docx` into one `GET /api/analytics` payload.
+
+| Method | Endpoint | Purpose |
+|---|---|---|
+| GET | `/api/health` | Liveness check |
+| POST | `/api/auth/register`, `/api/auth/login` | Create account / sign in (returns JWT) |
+| GET, PUT | `/api/auth/me` | Current user / update name and email |
+| GET, POST | `/api/posts` | List (filters: `search`, `platform`, `contentType`, `category`, `sort`) / create |
+| GET, PUT, DELETE | `/api/posts/:id` | One post by MongoDB `_id` or `postId` |
+| DELETE | `/api/posts?confirm=DELETE` | Delete all of the user's posts |
+| POST | `/api/upload/csv` | Import a CSV (`file` field, max 10,000 rows) |
+| GET | `/api/analytics` | KPIs, statistics, trends, breakdowns, heatmap, correlations (filters: `platform`, `contentType`, `category`, `startDate`, `endDate`) |
+| GET | `/api/analytics/insights` | Rule-based insights |
+| GET | `/api/analytics/compare` | Compare two months, platforms, content types or categories (`type`, `a`, `b`) |
+| POST | `/api/prediction` | Low/Medium/High prediction from pre-publication features (proxied to Flask `POST /predict`) |
+
+The Flask ML service (`analytics/app.py`) exposes `GET /health` (including `modelVersion`) and `POST /predict`; it is called only by the Node backend.
 
 ## Approved Visual Design System
 SocialIQ is designed following the precision dark Stitch design system:

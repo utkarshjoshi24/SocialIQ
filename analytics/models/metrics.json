@@ -1,5 +1,20 @@
 {
   "model": "DecisionTreeClassifier",
+  "model_info": {
+    "model_version": "4cd1e7cc720a",
+    "dataset": {
+      "file": "synthetic_training_data.csv",
+      "rows": 500,
+      "sha256": "394a665b61bd557e6a27345d19e189e8941dbc1ec7a5a9abb73ec3dbf8674468"
+    },
+    "environment": {
+      "python": "3.13.9",
+      "scikit_learn": "1.9.1",
+      "pandas": "3.1.1",
+      "numpy": "2.5.5",
+      "joblib": "1.6.0"
+    }
+  },
   "features": [
     "platform",
     "content_type",

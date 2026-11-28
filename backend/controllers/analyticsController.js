@@ -8,8 +8,12 @@ import { optionalString, parseStrictDate } from '../utils/validation.js';
 // Resolve paths from this file (not process.cwd()) so the backend works when
 // started from either the project root or backend/
 const rootDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
-const venvPython = path.resolve(rootDir, 'analytics/venv/bin/python');
-const pythonExec = fs.existsSync(venvPython) ? venvPython : 'python3';
+// PYTHON_PATH overrides; otherwise the analytics venv (macOS/Linux or Windows layout), then python3
+const venvPython = [
+  path.resolve(rootDir, 'analytics/venv/bin/python'),
+  path.resolve(rootDir, 'analytics/venv/Scripts/python.exe'),
+].find((candidate) => fs.existsSync(candidate));
+const pythonExec = process.env.PYTHON_PATH || venvPython || 'python3';
 const bridgeScript = path.resolve(rootDir, 'analytics/run_analytics_bridge.py');
 const insightsScript = path.resolve(rootDir, 'analytics/insights.py');
 
@@ -38,8 +42,12 @@ const toAnalyticsRecords = (posts) =>
     engagement_rate: Number(p.engagementRate) || 0,
   }));
 
+const PYTHON_TIMEOUT_MS = 60 * 1000;
+
 /**
- * Run a Python script with JSON on stdin; resolves with parsed JSON stdout
+ * Run a Python script with JSON on stdin; resolves with parsed JSON stdout.
+ * Every failure mode (missing interpreter, broken pipe, non-zero exit, hang,
+ * invalid JSON) rejects instead of crashing the server or hanging the request.
  */
 const runPythonJson = (script, input) =>
   new Promise((resolve, reject) => {
@@ -47,14 +55,29 @@ const runPythonJson = (script, input) =>
     let outputData = '';
     let errorData = '';
 
+    const timer = setTimeout(() => {
+      pyProcess.kill('SIGKILL');
+      reject(new Error(`Python script timed out after ${PYTHON_TIMEOUT_MS} ms: ${path.basename(script)}`));
+    }, PYTHON_TIMEOUT_MS);
+
     pyProcess.stdout.on('data', (chunk) => {
       outputData += chunk.toString();
     });
     pyProcess.stderr.on('data', (chunk) => {
       errorData += chunk.toString();
     });
-    pyProcess.on('error', reject);
+    // 'error' fires if the interpreter cannot be started; without a listener Node would crash
+    pyProcess.on('error', (err) => {
+      clearTimeout(timer);
+      reject(err);
+    });
+    // EPIPE if the script exits before reading all of stdin
+    pyProcess.stdin.on('error', (err) => {
+      clearTimeout(timer);
+      reject(err);
+    });
     pyProcess.on('close', (code) => {
+      clearTimeout(timer);
       if (code !== 0) {
         return reject(new Error(`Python exited with code ${code}: ${errorData}`));
       }
@@ -289,44 +312,13 @@ export const getAnalytics = async (req, res) => {
     // Transform MongoDB documents to analytics format
     const transformedPosts = toAnalyticsRecords(posts);
 
-    // Spawn Python analytics bridge
-    const pyProcess = spawn(pythonExec, [bridgeScript], {
-      cwd: rootDir,
-    });
-
-    let outputData = '';
-    let errorData = '';
-
-    pyProcess.stdout.on('data', (chunk) => {
-      outputData += chunk.toString();
-    });
-
-    pyProcess.stderr.on('data', (chunk) => {
-      errorData += chunk.toString();
-    });
-
-    pyProcess.on('close', (code) => {
-      if (code !== 0) {
-        console.error(`[Analytics Bridge Error] Code: ${code}, Stderr: ${errorData}`);
-        return res.status(500).json({ error: 'Failed to compute analytics on dataset' });
-      }
-
-      try {
-        const analyticsResult = JSON.parse(outputData);
-        analyticsResult.filterOptions = filterOptions;
-        analyticsResult.datasetPosts = datasetPosts;
-        return res.json(analyticsResult);
-      } catch (parseErr) {
-        console.error('[Analytics Bridge JSON Parse Error]', parseErr, outputData);
-        return res.status(500).json({ error: 'Invalid response from analytics engine' });
-      }
-    });
-
-    // Write input JSON to stdin and end stream
-    pyProcess.stdin.write(JSON.stringify(transformedPosts));
-    pyProcess.stdin.end();
+    const analyticsResult = await runPythonJson(bridgeScript, transformedPosts);
+    analyticsResult.filterOptions = filterOptions;
+    analyticsResult.datasetPosts = datasetPosts;
+    return res.json(analyticsResult);
   } catch (err) {
+    // Details (including Python stderr) stay in the server log
     console.error('[Analytics Controller Error]', err);
-    return res.status(500).json({ error: 'Server error processing analytics' });
+    return res.status(500).json({ error: 'Failed to compute analytics on dataset' });
   }
 };

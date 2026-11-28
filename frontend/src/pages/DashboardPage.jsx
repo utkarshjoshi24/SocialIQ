@@ -265,6 +265,7 @@ export default function DashboardPage() {
                   </defs>
                   <XAxis
                     dataKey="date"
+                    minTickGap={28}
                     stroke="#1D2028"
                     tick={{ fill: '#828B99', fontSize: 11, fontFamily: 'Spline Sans Mono, monospace' }}
                     tickLine={false}

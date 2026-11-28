@@ -37,6 +37,7 @@ USAGE:
 """
 
 import os
+import json
 import logging
 
 from dotenv import load_dotenv
@@ -159,7 +160,7 @@ def create_app(predictor: PerformancePredictor = None) -> Flask:
 
     # Load the trained model once at startup — never retrained per request.
     predictor = predictor or PerformancePredictor()
-    state = {'predictor': None, 'allowed': None}
+    state = {'predictor': None, 'allowed': None, 'version': None}
     try:
         predictor.load()
         state['allowed'] = predictor.feature_categories()
@@ -168,10 +169,23 @@ def create_app(predictor: PerformancePredictor = None) -> Flask:
     except Exception:
         logger.exception('Failed to load ML model; /predict will return 503')
 
+    # Model version (SHA-256 prefix of model.pkl) recorded by train_model.py
+    metrics_path = os.path.join(os.path.dirname(predictor.model_path), 'metrics.json')
+    if state['predictor'] is not None and os.path.isfile(metrics_path):
+        try:
+            with open(metrics_path) as f:
+                state['version'] = json.load(f).get('model_info', {}).get('model_version')
+        except (OSError, ValueError):
+            logger.warning('Could not read model version from %s', metrics_path)
+
     @app.get('/health')
     def health():
         loaded = state['predictor'] is not None
-        return jsonify({'status': 'ok' if loaded else 'degraded', 'modelLoaded': loaded}), 200
+        return jsonify({
+            'status': 'ok' if loaded else 'degraded',
+            'modelLoaded': loaded,
+            'modelVersion': state['version'],
+        }), 200
 
     @app.post('/predict')
     def predict():
