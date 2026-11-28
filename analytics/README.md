@@ -6,14 +6,19 @@ This module provides data cleaning, descriptive statistics, aggregation algorith
 
 ```
 analytics/
-├── models/             # Directory for trained model artifacts (model.pkl, thresholds.json, metrics.json)
-├── app.py              # Flask prediction API (POST /predict)
-├── preprocessing.py    # CSV cleaning, validation, and feature derivation
-├── analytics.py        # Statistics, aggregations, correlation matrix
-├── train_model.py      # Scikit-learn model training pipeline (Decision Tree)
-├── predict.py          # Prediction inference logic and scoring
-├── requirements.txt    # Python dependencies
-└── README.md
+├── app.py                      # Flask ML API: GET /health, POST /predict
+├── predict.py                  # Loads models/model.pkl, predicts Low/Medium/High + score
+├── train_model.py              # Training pipeline (writes models/*)
+├── generate_training_data.py   # Synthetic training dataset generator (seeded)
+├── preprocessing.py            # Load / clean / derive engagement fields
+├── analytics.py                # KPIs, descriptive stats, group analyses, heatmap, correlations
+├── run_analytics_bridge.py     # stdin→stdout JSON bridge used by GET /api/analytics
+├── insights.py                 # Rule-based insights engine (GET /api/analytics/insights)
+├── compare.py                  # Segment comparison engine (GET /api/analytics/compare)
+├── data/synthetic_training_data.csv
+├── models/                     # model.pkl, thresholds.json, metrics.json
+├── test_*.py                   # unittest suites (81 tests)
+└── requirements.txt            # Pinned to the versions model.pkl was trained with
 ```
 
 ## Setup & Virtual Environment
@@ -54,8 +59,27 @@ pip install -r requirements.txt
    - Evaluates accuracy and exports serialized artifact to `models/model.pkl`.
 
 4. **`predict.py`**:
-   - Loads serialized model and encodes input features (platform, format, duration, tags, hour, day).
-   - Returns predicted performance tier, confidence score (0–100), and feature impact notes.
+   - Loads the serialized pipeline once and predicts from the 8 pre-publication features.
+   - Returns the predicted tier, a relative 5–99 score, the class mix of the matching
+     decision-tree leaf, and a plain-language explanation (the Flask API returns tier,
+     score, model name and message).
+
+## ML Model
+
+| Item | Value |
+|---|---|
+| Task | Classify a planned post as **Low / Medium / High** performance before publishing |
+| Features (pre-publication only) | platform, content_type, category, day_of_week, caption_length, hashtags_count, duration_seconds, posting_hour |
+| Excluded (outcomes → leakage) | views, likes, comments, shares, saves, reach, engagement_rate |
+| Target | `engagement_rate` split at the 33rd / 66th percentiles of the **training split** (5.64% / 7.89%, `models/thresholds.json`) |
+| Model | `OneHotEncoder` (categoricals) + `DecisionTreeClassifier(max_depth=8, min_samples_leaf=5, min_samples_split=10, class_weight='balanced', random_state=42)` in one sklearn `Pipeline` |
+| Data | 500 synthetic rows (`data/synthetic_training_data.csv`), 80/20 split, `random_state=42` |
+| Test results | accuracy 0.50 (majority-class baseline 0.38), macro precision 0.49, recall 0.49, F1 0.49 |
+| Known limitation | train accuracy 0.755 vs test 0.50 → overfitting flagged; synthetic data, so not representative of real platforms |
+| Version | `models/metrics.json → model_info.model_version` (SHA-256 prefix of model.pkl), also returned by `GET /health` |
+
+Retrain with `./venv/bin/python train_model.py`; with the same data and pinned libraries it
+reproduces a byte-identical `model.pkl`.
 
 ## Prediction API (Flask)
 

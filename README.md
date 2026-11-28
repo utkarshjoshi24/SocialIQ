@@ -8,15 +8,20 @@ The project is structured with clean separation of responsibilities:
 
 ```
 SocialIQ/
-├── frontend/        # React + Vite + Tailwind CSS (Stitch UI blueprint)
-├── backend/         # Node.js + Express + MongoDB (Auth, CRUD, Ingestion)
-├── analytics/       # Python + Pandas + Scikit-learn + Flask (Analytics & ML prediction)
-├── docs/            # Project specifications (PRD, SRS, Architecture, Data Dictionary)
-├── Stitch/          # Approved Stitch UI design source of truth & HTML blueprints
-├── .env.example     # Master environment configuration template
-├── .gitignore       # Git ignore rules
-└── README.md        # Project overview & documentation
+├── frontend/        # React + Vite + Tailwind CSS (Stitch UI)
+├── backend/         # Node.js + Express + Mongoose (auth, posts, CSV import, analytics/ML orchestration)
+├── analytics/       # Python: pandas analytics, insights, compare, scikit-learn model, Flask /predict
+├── tests/           # End-to-end API test suite (api_test.py)
+├── docs/            # Project specifications (PRD, SRS, architecture, data dictionary, ML plan…)
+├── Files/           # Copy of docs/
+├── Stitch/          # Approved Stitch UI designs (HTML blueprints + design system)
+├── .env.example     # Environment variable reference for all services
+└── README.md
 ```
+
+Request flow: React → Express (`/api`) → MongoDB. For analytics, insights and compare the
+backend runs the Python scripts in `analytics/` as child processes; for predictions it calls
+the Flask ML service (`POST /predict`). The browser never talks to Python directly.
 
 ## Quick Start
 
@@ -80,6 +85,20 @@ The implemented API consolidates the per-section analytics endpoints sketched in
 | POST | `/api/prediction` | Low/Medium/High prediction from pre-publication features (proxied to Flask `POST /predict`) |
 
 The Flask ML service (`analytics/app.py`) exposes `GET /health` (including `modelVersion`) and `POST /predict`; it is called only by the Node backend.
+
+## Deployment
+
+Each service is configured with environment variables (see the `.env.example` files);
+secrets are never committed.
+
+| Service | Host (per docs/03) | Required settings |
+|---|---|---|
+| MongoDB | MongoDB Atlas | Create a database user; use its connection string as `MONGODB_URI` |
+| Flask ML API | Render / Railway | `pip install -r analytics/requirements.txt`, run `python app.py` with `FLASK_HOST=0.0.0.0`, `FLASK_PORT`; keep it reachable **only** by the backend (it has no auth of its own) |
+| Node backend | Render / Railway | `NODE_ENV=production`, `JWT_SECRET` (32+ random chars, required), `MONGODB_URI`, `CLIENT_URL` (frontend origin), `FLASK_ANALYTICS_URL`, `TRUST_PROXY=1` behind the host's proxy. **The host also needs Python 3.11+ with `analytics/requirements.txt` installed** (or `PYTHON_PATH` pointing at it), because analytics, insights and compare run as Python child processes |
+| Frontend | Vercel | Root `frontend/`, build `npm run build`, output `dist/`, `VITE_API_URL` = backend origin. `frontend/vercel.json` rewrites all routes to `index.html` for client-side routing |
+
+The Flask development server is used as-is; for higher traffic run `app:create_app()` under a WSGI server such as gunicorn.
 
 ## Approved Visual Design System
 SocialIQ is designed following the precision dark Stitch design system:

@@ -11,12 +11,10 @@ node_modules/
 dist/
 build/
 
-# Environment variables
+# Environment variables (every .env variant except the committed templates)
 .env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
+.env.*
+!.env.example
 
 # Python / Analytics
 __pycache__/

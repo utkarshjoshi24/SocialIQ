@@ -3,7 +3,9 @@
  * Handles authentication headers, error normalization, and endpoints for Auth, Posts, and CSV Upload.
  */
 
-const API_BASE = '/api';
+// Same-origin '/api' by default (Vite dev proxy). For a deployment where the frontend and
+// backend live on different domains, set VITE_API_URL to the backend origin at build time.
+const API_BASE = `${(import.meta.env.VITE_API_URL || '').replace(/\/+$/, '')}/api`;
 
 const getAuthHeaders = () => {
   const token = localStorage.getItem('socialiq_token');

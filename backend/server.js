@@ -30,6 +30,14 @@ connectDB();
 // Don't advertise the framework in response headers
 app.disable('x-powered-by');
 
+// Behind a hosting proxy (Render, Railway, nginx) req.ip is the proxy's address unless
+// Express trusts it; the login rate limiter needs the real client IP.
+// TRUST_PROXY is the number of proxy hops (usually 1).
+if (process.env.TRUST_PROXY) {
+  const hops = Number(process.env.TRUST_PROXY);
+  app.set('trust proxy', Number.isInteger(hops) ? hops : process.env.TRUST_PROXY);
+}
+
 // Middleware
 app.use(
   cors({
