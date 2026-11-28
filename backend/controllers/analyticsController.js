@@ -3,6 +3,7 @@ import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
 import Post from '../models/Post.js';
+import { optionalString, parseStrictDate } from '../utils/validation.js';
 
 // Resolve paths from this file (not process.cwd()) so the backend works when
 // started from either the project root or backend/
@@ -144,7 +145,13 @@ const segmentPosts = (posts, type, value) => {
  */
 export const getCompare = async (req, res) => {
   try {
-    const { type = 'date', a, b } = req.query;
+    const type = optionalString(req.query.type) ?? 'date';
+    const a = optionalString(req.query.a);
+    const b = optionalString(req.query.b);
+    // Arrays/objects (e.g. ?a[]=x) are rejected before any string logic runs
+    if ([type, a, b].includes(null)) {
+      return res.status(400).json({ error: 'Query parameters must be single text values' });
+    }
 
     if (type !== 'date' && !COMPARE_FIELDS[type]) {
       return res.status(400).json({ error: 'type must be one of: date, platform, contentType, category' });
@@ -187,7 +194,15 @@ export const getCompare = async (req, res) => {
 export const getAnalytics = async (req, res) => {
   try {
     const userId = req.user.id;
-    const { platform, contentType, category, startDate, endDate } = req.query;
+    const platform = optionalString(req.query.platform);
+    const contentType = optionalString(req.query.contentType);
+    const category = optionalString(req.query.category);
+    const startDate = optionalString(req.query.startDate);
+    const endDate = optionalString(req.query.endDate);
+    // Arrays/objects (e.g. ?platform[$ne]=x) must never reach the MongoDB filter
+    if ([platform, contentType, category, startDate, endDate].includes(null)) {
+      return res.status(400).json({ error: 'Query parameters must be single text values' });
+    }
 
     // Build filter query for user posts
     const query = { userId };
@@ -202,9 +217,9 @@ export const getAnalytics = async (req, res) => {
       query.category = category;
     }
     if (startDate || endDate) {
-      const start = startDate ? new Date(startDate) : null;
-      const end = endDate ? new Date(endDate) : null;
-      if ((start && isNaN(start.getTime())) || (end && isNaN(end.getTime()))) {
+      const start = startDate ? parseStrictDate(startDate) : null;
+      const end = endDate ? parseStrictDate(endDate) : null;
+      if ((startDate && !start) || (endDate && !end)) {
         return res.status(400).json({ error: 'startDate and endDate must be valid dates (YYYY-MM-DD)' });
       }
       if (start && end && start > end) {

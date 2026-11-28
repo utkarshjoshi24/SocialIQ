@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { authService } from '../services/api';
+import { authService, UNAUTHORIZED_EVENT } from '../services/api';
 
 const AuthContext = createContext(null);
 
@@ -25,8 +25,9 @@ export const AuthProvider = ({ children }) => {
           setUser(res.user);
         }
       } catch (err) {
-        console.warn('Session expired or invalid token:', err.message);
-        if (isMounted) {
+        console.warn('Session check failed:', err.message);
+        // Only a rejected token signs the user out; a network error or server outage keeps the session
+        if (isMounted && err.status === 401) {
           localStorage.removeItem('socialiq_token');
           setToken(null);
           setUser(null);
@@ -42,6 +43,18 @@ export const AuthProvider = ({ children }) => {
       isMounted = false;
     };
   }, [token]);
+
+  // A token that expires mid-session is rejected by any protected API call:
+  // clear it so ProtectedRoute redirects to the login page
+  useEffect(() => {
+    const handleUnauthorized = () => {
+      localStorage.removeItem('socialiq_token');
+      setToken(null);
+      setUser(null);
+    };
+    window.addEventListener(UNAUTHORIZED_EVENT, handleUnauthorized);
+    return () => window.removeEventListener(UNAUTHORIZED_EVENT, handleUnauthorized);
+  }, []);
 
   const login = async (email, password) => {
     setError(null);

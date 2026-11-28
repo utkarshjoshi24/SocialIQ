@@ -1,5 +1,11 @@
 import User from '../models/User.js';
 import { generateToken } from '../utils/generateToken.js';
+import { isString } from '../utils/validation.js';
+
+// bcrypt only uses the first 72 bytes; cap length so huge bodies can't waste hashing time
+const MAX_PASSWORD_LENGTH = 128;
+
+const validationMessage = (error) => Object.values(error.errors || {})[0]?.message || 'Invalid input';
 
 /**
  * @desc    Register a new user
@@ -10,25 +16,25 @@ export const register = async (req, res) => {
   try {
     const { name, email, password } = req.body;
 
-    // Validate inputs
-    if (!name || !email || !password) {
+    // Validate inputs (type checks also block operator objects such as {"$gt": ""})
+    if (!isString(name) || !isString(email) || !isString(password) || !name.trim() || !email.trim() || !password) {
       return res.status(400).json({ error: 'Please provide name, email, and password' });
     }
 
-    if (password.length < 6) {
-      return res.status(400).json({ error: 'Password must be at least 6 characters' });
+    if (password.length < 6 || password.length > MAX_PASSWORD_LENGTH) {
+      return res.status(400).json({ error: `Password must be between 6 and ${MAX_PASSWORD_LENGTH} characters` });
     }
 
     // Check if user already exists
-    const userExists = await User.findOne({ email: email.toLowerCase() });
+    const userExists = await User.findOne({ email: email.trim().toLowerCase() });
     if (userExists) {
       return res.status(400).json({ error: 'User with this email already exists' });
     }
 
     // Create user
     const user = await User.create({
-      name,
-      email,
+      name: name.trim(),
+      email: email.trim(),
       password,
     });
 
@@ -45,8 +51,14 @@ export const register = async (req, res) => {
       },
     });
   } catch (error) {
+    if (error.name === 'ValidationError') {
+      return res.status(400).json({ error: validationMessage(error) });
+    }
+    if (error.code === 11000) {
+      return res.status(400).json({ error: 'User with this email already exists' });
+    }
     console.error('Register error:', error);
-    res.status(500).json({ error: error.message || 'Server error during registration' });
+    res.status(500).json({ error: 'Server error during registration' });
   }
 };
 
@@ -59,12 +71,15 @@ export const login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    if (!email || !password) {
+    if (!isString(email) || !isString(password) || !email.trim() || !password) {
       return res.status(400).json({ error: 'Please provide email and password' });
+    }
+    if (password.length > MAX_PASSWORD_LENGTH) {
+      return res.status(401).json({ error: 'Invalid email or password' });
     }
 
     // Check for user (must explicitly select password since select: false)
-    const user = await User.findOne({ email: email.toLowerCase() }).select('+password');
+    const user = await User.findOne({ email: email.trim().toLowerCase() }).select('+password');
     if (!user) {
       return res.status(401).json({ error: 'Invalid email or password' });
     }
@@ -89,7 +104,7 @@ export const login = async (req, res) => {
     });
   } catch (error) {
     console.error('Login error:', error);
-    res.status(500).json({ error: error.message || 'Server error during login' });
+    res.status(500).json({ error: 'Server error during login' });
   }
 };
 
@@ -102,6 +117,9 @@ export const updateMe = async (req, res) => {
   try {
     const { name, email } = req.body;
 
+    if ((name !== undefined && !isString(name)) || (email !== undefined && !isString(email))) {
+      return res.status(400).json({ error: 'Name and email must be text' });
+    }
     if (name !== undefined && !String(name).trim()) {
       return res.status(400).json({ error: 'Name cannot be empty' });
     }
@@ -124,8 +142,10 @@ export const updateMe = async (req, res) => {
     res.status(200).json({ success: true, user });
   } catch (error) {
     if (error.name === 'ValidationError') {
-      const message = Object.values(error.errors)[0]?.message || 'Invalid profile data';
-      return res.status(400).json({ error: message });
+      return res.status(400).json({ error: validationMessage(error) });
+    }
+    if (error.code === 11000) {
+      return res.status(400).json({ error: 'That email is already used by another account' });
     }
     console.error('UpdateMe error:', error);
     res.status(500).json({ error: 'Server error updating profile' });

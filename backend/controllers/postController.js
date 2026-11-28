@@ -1,5 +1,39 @@
 import mongoose from 'mongoose';
 import Post, { VALID_PLATFORMS, VALID_CONTENT_TYPES } from '../models/Post.js';
+import {
+  MAX_CATEGORY_LENGTH,
+  MAX_POST_ID_LENGTH,
+  escapeRegex,
+  isString,
+  optionalString,
+  parseNonNegativeNumber,
+  parsePostingHour,
+  parseStrictDate,
+} from '../utils/validation.js';
+
+const NUMERIC_KEYS = [
+  'views',
+  'likes',
+  'comments',
+  'shares',
+  'saves',
+  'reach',
+  'captionLength',
+  'hashtagsCount',
+  'durationSeconds',
+];
+
+/** Mongoose validation / cast errors are client errors; anything else is a generic 500 */
+const sendError = (res, error, fallback) => {
+  if (error.name === 'ValidationError') {
+    const message = Object.values(error.errors || {})[0]?.message || 'Invalid post data';
+    return res.status(400).json({ error: message });
+  }
+  if (error.name === 'CastError') {
+    return res.status(400).json({ error: `Invalid value for ${error.path}` });
+  }
+  return res.status(500).json({ error: fallback });
+};
 
 const SORTABLE_FIELDS = ['date', 'views', 'likes', 'comments', 'shares', 'saves', 'reach', 'engagementRate', 'postId', 'createdAt'];
 
@@ -33,33 +67,31 @@ export const getPosts = async (req, res) => {
   try {
     const query = { userId: req.user._id };
 
+    const search = optionalString(req.query.search);
+    const platform = optionalString(req.query.platform);
+    const contentType = optionalString(req.query.contentType);
+    const category = optionalString(req.query.category);
+    const sortParam = optionalString(req.query.sort);
+    // Arrays/objects (e.g. ?platform[$ne]=x) must never reach the MongoDB filter
+    if ([search, platform, contentType, category, sortParam].includes(null)) {
+      return res.status(400).json({ error: 'Query parameters must be single text values' });
+    }
+
     // Search query across category, platform, or postId (escaped so input like "(" is literal)
-    if (req.query.search) {
-      const escaped = String(req.query.search).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-      const regex = new RegExp(escaped, 'i');
+    if (search) {
+      const regex = new RegExp(escapeRegex(search.slice(0, 100)), 'i');
       query.$or = [{ category: regex }, { platform: regex }, { postId: regex }];
     }
 
-    // Platform filter
-    if (req.query.platform && req.query.platform !== 'All') {
-      query.platform = req.query.platform;
-    }
-
-    // Content Type filter
-    if (req.query.contentType && req.query.contentType !== 'All') {
-      query.contentType = req.query.contentType;
-    }
-
-    // Category filter
-    if (req.query.category && req.query.category !== 'All') {
-      query.category = req.query.category;
-    }
+    if (platform && platform !== 'All') query.platform = platform;
+    if (contentType && contentType !== 'All') query.contentType = contentType;
+    if (category && category !== 'All') query.category = category;
 
     // Sorting
     let sort = { date: -1, createdAt: -1 };
-    if (req.query.sort) {
-      const sortField = String(req.query.sort).replace('-', '');
-      const sortOrder = String(req.query.sort).startsWith('-') ? -1 : 1;
+    if (sortParam) {
+      const sortField = sortParam.replace('-', '');
+      const sortOrder = sortParam.startsWith('-') ? -1 : 1;
       if (SORTABLE_FIELDS.includes(sortField)) {
         sort = { [sortField]: sortOrder };
       }
@@ -74,7 +106,7 @@ export const getPosts = async (req, res) => {
     });
   } catch (error) {
     console.error('getPosts error:', error);
-    res.status(500).json({ error: error.message || 'Server error fetching posts' });
+    sendError(res, error, 'Server error fetching posts');
   }
 };
 
@@ -97,7 +129,7 @@ export const getPostById = async (req, res) => {
     });
   } catch (error) {
     console.error('getPostById error:', error);
-    res.status(500).json({ error: error.message || 'Server error fetching post' });
+    sendError(res, error, 'Server error fetching post');
   }
 };
 
@@ -126,11 +158,20 @@ export const createPost = async (req, res) => {
       reach = 0,
     } = req.body;
 
-    // 1. Required fields validation
-    if (!platform || !contentType || !category || postingHour === undefined || postingHour === null) {
+    // 1. Required fields validation (strings only — objects/arrays are rejected)
+    if (!isString(platform) || !isString(contentType) || !isString(category) || !category.trim() ||
+        postingHour === undefined || postingHour === null || postingHour === '') {
       return res.status(400).json({
         error: 'Please provide all required fields: platform, contentType, category, and postingHour',
       });
+    }
+    if (category.trim().length > MAX_CATEGORY_LENGTH) {
+      return res.status(400).json({ error: `Category cannot exceed ${MAX_CATEGORY_LENGTH} characters` });
+    }
+    if (customPostId !== undefined && customPostId !== null && customPostId !== '') {
+      if (!isString(customPostId) || !customPostId.trim() || customPostId.trim().length > MAX_POST_ID_LENGTH) {
+        return res.status(400).json({ error: `postId must be text of at most ${MAX_POST_ID_LENGTH} characters` });
+      }
     }
 
     // 2. Validate Platform & Content Type
@@ -147,39 +188,35 @@ export const createPost = async (req, res) => {
     }
 
     // 3. Validate postingHour (0-23)
-    const parsedHour = Number(postingHour);
-    if (!Number.isInteger(parsedHour) || parsedHour < 0 || parsedHour > 23) {
+    const parsedHour = parsePostingHour(postingHour);
+    if (parsedHour === null) {
       return res.status(400).json({
         error: 'Posting hour must be an integer between 0 and 23',
       });
     }
 
-    // 4. Validate non-negative numbers
-    const numericFields = {
-      views: Number(views),
-      likes: Number(likes),
-      comments: Number(comments),
-      shares: Number(shares),
-      saves: Number(saves),
-      reach: Number(reach),
-      captionLength: Number(captionLength),
-      hashtagsCount: Number(hashtagsCount),
-      durationSeconds: Number(durationSeconds),
-    };
-
-    for (const [key, val] of Object.entries(numericFields)) {
-      if (isNaN(val) || val < 0) {
+    // 4. Validate non-negative, finite numbers
+    const rawNumbers = { views, likes, comments, shares, saves, reach, captionLength, hashtagsCount, durationSeconds };
+    const numericFields = {};
+    for (const [key, raw] of Object.entries(rawNumbers)) {
+      const val = parseNonNegativeNumber(raw);
+      if (val === null) {
         return res.status(400).json({
           error: `${key} must be a non-negative number`,
         });
       }
+      numericFields[key] = val;
     }
 
     // 5. Generate or validate postId
-    let assignedPostId = customPostId;
+    let assignedPostId = isString(customPostId) ? customPostId.trim() : '';
     if (!assignedPostId) {
-      const count = await Post.countDocuments({ userId: req.user._id });
-      assignedPostId = `P${String(count + 1).padStart(3, '0')}`;
+      // Next free P### id (a plain count can collide after posts are deleted)
+      let next = (await Post.countDocuments({ userId: req.user._id })) + 1;
+      do {
+        assignedPostId = `P${String(next).padStart(3, '0')}`;
+        next += 1;
+      } while (await Post.exists({ userId: req.user._id, postId: assignedPostId }));
     }
 
     // Check for duplicate postId for this user
@@ -192,10 +229,10 @@ export const createPost = async (req, res) => {
 
     // 6. Validate Date
     let parsedDate = new Date();
-    if (date) {
-      parsedDate = new Date(date);
-      if (isNaN(parsedDate.getTime())) {
-        return res.status(400).json({ error: 'Invalid date provided' });
+    if (date !== undefined && date !== null && date !== '') {
+      parsedDate = parseStrictDate(date);
+      if (!parsedDate) {
+        return res.status(400).json({ error: 'Invalid date provided (use YYYY-MM-DD)' });
       }
     }
 
@@ -238,7 +275,7 @@ export const createPost = async (req, res) => {
     if (error.code === 11000) {
       return res.status(400).json({ error: 'A post with this postId already exists' });
     }
-    res.status(500).json({ error: error.message || 'Server error creating post' });
+    sendError(res, error, 'Server error creating post');
   }
 };
 
@@ -253,6 +290,16 @@ export const updatePost = async (req, res) => {
 
     if (!post) {
       return res.status(404).json({ error: 'Post not found or unauthorized' });
+    }
+
+    const body = req.body || {};
+    for (const key of ['platform', 'contentType', 'category']) {
+      if (body[key] !== undefined && (!isString(body[key]) || !body[key].trim())) {
+        return res.status(400).json({ error: `${key} must be non-empty text` });
+      }
+    }
+    if (isString(body.category) && body.category.trim().length > MAX_CATEGORY_LENGTH) {
+      return res.status(400).json({ error: `Category cannot exceed ${MAX_CATEGORY_LENGTH} characters` });
     }
 
     // Validate platform if provided
@@ -271,8 +318,8 @@ export const updatePost = async (req, res) => {
 
     // Validate postingHour if provided
     if (req.body.postingHour !== undefined) {
-      const parsedHour = Number(req.body.postingHour);
-      if (!Number.isInteger(parsedHour) || parsedHour < 0 || parsedHour > 23) {
+      const parsedHour = parsePostingHour(req.body.postingHour);
+      if (parsedHour === null) {
         return res.status(400).json({
           error: 'Posting hour must be an integer between 0 and 23',
         });
@@ -281,22 +328,10 @@ export const updatePost = async (req, res) => {
     }
 
     // Validate numeric values if provided
-    const numericKeys = [
-      'views',
-      'likes',
-      'comments',
-      'shares',
-      'saves',
-      'reach',
-      'captionLength',
-      'hashtagsCount',
-      'durationSeconds',
-    ];
-
-    for (const key of numericKeys) {
+    for (const key of NUMERIC_KEYS) {
       if (req.body[key] !== undefined) {
-        const val = Number(req.body[key]);
-        if (isNaN(val) || val < 0) {
+        const val = parseNonNegativeNumber(req.body[key]);
+        if (val === null) {
           return res.status(400).json({ error: `${key} must be a non-negative number` });
         }
         post[key] = val;
@@ -308,9 +343,9 @@ export const updatePost = async (req, res) => {
     if (req.body.contentType) post.contentType = req.body.contentType;
     if (req.body.category) post.category = req.body.category.trim();
     if (req.body.date) {
-      const parsedDate = new Date(req.body.date);
-      if (isNaN(parsedDate.getTime())) {
-        return res.status(400).json({ error: 'Invalid date provided' });
+      const parsedDate = parseStrictDate(req.body.date);
+      if (!parsedDate) {
+        return res.status(400).json({ error: 'Invalid date provided (use YYYY-MM-DD)' });
       }
       post.date = parsedDate;
     }
@@ -327,7 +362,7 @@ export const updatePost = async (req, res) => {
     });
   } catch (error) {
     console.error('updatePost error:', error);
-    res.status(500).json({ error: error.message || 'Server error updating post' });
+    sendError(res, error, 'Server error updating post');
   }
 };
 
@@ -369,6 +404,6 @@ export const deletePost = async (req, res) => {
     });
   } catch (error) {
     console.error('deletePost error:', error);
-    res.status(500).json({ error: error.message || 'Server error deleting post' });
+    sendError(res, error, 'Server error deleting post');
   }
 };

@@ -13,9 +13,16 @@ const getAuthHeaders = () => {
   };
 };
 
+// Fired when an authenticated request is rejected (expired/invalid token); AuthContext signs out
+export const UNAUTHORIZED_EVENT = 'socialiq:unauthorized';
+
 const handleResponse = async (response) => {
   const data = await response.json().catch(() => ({}));
   if (!response.ok) {
+    const isCredentialRequest = /\/auth\/(login|register)$/.test(new URL(response.url, window.location.origin).pathname);
+    if (response.status === 401 && !isCredentialRequest && localStorage.getItem('socialiq_token')) {
+      window.dispatchEvent(new CustomEvent(UNAUTHORIZED_EVENT, { detail: data.error }));
+    }
     const errorMsg = data.error || data.message || `Request failed with status ${response.status}`;
     const error = new Error(errorMsg);
     error.status = response.status;

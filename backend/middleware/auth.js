@@ -1,5 +1,6 @@
 import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
+import { getJwtSecret, JWT_ALGORITHM } from '../config/jwt.js';
 
 /**
  * Protect routes - verify JWT token and attach authenticated user to req.user
@@ -7,11 +8,9 @@ import User from '../models/User.js';
 export const protect = async (req, res, next) => {
   let token;
 
-  if (
-    req.headers.authorization &&
-    req.headers.authorization.startsWith('Bearer')
-  ) {
-    token = req.headers.authorization.split(' ')[1];
+  const header = req.headers.authorization;
+  if (typeof header === 'string' && header.startsWith('Bearer ')) {
+    token = header.slice('Bearer '.length).trim();
   }
 
   if (!token) {
@@ -19,8 +18,8 @@ export const protect = async (req, res, next) => {
   }
 
   try {
-    const secret = process.env.JWT_SECRET || 'super_secret_jwt_key_change_in_production';
-    const decoded = jwt.verify(token, secret);
+    // Pin the algorithm so a token signed with anything else (e.g. "none") is rejected
+    const decoded = jwt.verify(token, getJwtSecret(), { algorithms: [JWT_ALGORITHM] });
 
     // Fetch user without password
     const user = await User.findById(decoded.id).select('-password');
@@ -31,6 +30,9 @@ export const protect = async (req, res, next) => {
     req.user = user;
     next();
   } catch (error) {
-    return res.status(401).json({ error: 'Not authorized, token invalid or expired' });
+    const expired = error.name === 'TokenExpiredError';
+    return res.status(401).json({
+      error: expired ? 'Session expired, please sign in again' : 'Not authorized, token invalid or expired',
+    });
   }
 };

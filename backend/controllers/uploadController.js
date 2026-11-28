@@ -1,5 +1,15 @@
 import Post, { VALID_PLATFORMS, VALID_CONTENT_TYPES } from '../models/Post.js';
 import { parseCSV } from '../utils/csvParser.js';
+import {
+  MAX_CATEGORY_LENGTH,
+  MAX_POST_ID_LENGTH,
+  parsePostingHour,
+  parseStrictDate,
+} from '../utils/validation.js';
+
+// Upper bounds so a single upload cannot exhaust memory or produce a huge response
+const MAX_CSV_ROWS = 10000;
+const MAX_REPORTED_ERRORS = 200;
 
 const REQUIRED_CSV_COLUMNS = [
   'post_id',
@@ -38,11 +48,22 @@ export const uploadCSV = async (req, res) => {
     }
 
     // 3. Read & parse CSV buffer
-    const csvContent = req.file.buffer.toString('utf-8');
+    // Strip a UTF-8 byte-order mark (Excel adds one), which would otherwise break the first header
+    const csvContent = req.file.buffer.toString('utf-8').replace(/^\uFEFF/, '');
+    // NUL bytes mean this is a binary file renamed to .csv
+    if (csvContent.includes('\u0000')) {
+      return res.status(400).json({ error: 'The uploaded file is not a text CSV file' });
+    }
     const { headers, rows } = parseCSV(csvContent);
 
     if (!headers || headers.length === 0 || !rows || rows.length === 0) {
       return res.status(400).json({ error: 'The uploaded CSV file is empty or corrupted' });
+    }
+
+    if (rows.length > MAX_CSV_ROWS) {
+      return res.status(400).json({
+        error: `CSV has ${rows.length} rows; the maximum per upload is ${MAX_CSV_ROWS}. Split the file and upload in parts.`,
+      });
     }
 
     // 4. Validate required columns exist in headers
@@ -64,6 +85,12 @@ export const uploadCSV = async (req, res) => {
     const errorRows = [];
     const previewRows = [];
 
+    // Raw values are echoed back in error messages; keep them short
+    const shown = (value) => {
+      const text = String(value ?? '');
+      return text.length > 40 ? `${text.slice(0, 40)}…` : text;
+    };
+
     // 5. Validate row-by-row
     rows.forEach((row, index) => {
       const rowNum = index + 2; // +1 for 0-index, +1 for header line
@@ -78,10 +105,12 @@ export const uploadCSV = async (req, res) => {
       // Validate Post ID
       if (!rawPostId) {
         rowErrors.push('Missing post_id');
+      } else if (rawPostId.length > MAX_POST_ID_LENGTH) {
+        rowErrors.push(`post_id cannot exceed ${MAX_POST_ID_LENGTH} characters`);
       } else if (seenCsvPostIds.has(rawPostId)) {
-        rowErrors.push(`Duplicate post_id "${rawPostId}" within CSV`);
+        rowErrors.push(`Duplicate post_id "${shown(rawPostId)}" within CSV`);
       } else if (existingDbPostIds.has(rawPostId)) {
-        rowErrors.push(`post_id "${rawPostId}" already exists in your workspace`);
+        rowErrors.push(`post_id "${shown(rawPostId)}" already exists in your workspace`);
       } else {
         seenCsvPostIds.add(rawPostId);
       }
@@ -91,9 +120,10 @@ export const uploadCSV = async (req, res) => {
       if (!rawDate) {
         rowErrors.push('Missing date');
       } else {
-        parsedDate = new Date(rawDate);
-        if (isNaN(parsedDate.getTime())) {
-          rowErrors.push(`Invalid date format "${rawDate}"`);
+        // Strict YYYY-MM-DD: rejects impossible dates (2026-02-30) instead of rolling them over
+        parsedDate = parseStrictDate(rawDate);
+        if (!parsedDate) {
+          rowErrors.push(`Invalid date "${shown(rawDate)}" (use YYYY-MM-DD)`);
         }
       }
 
@@ -102,7 +132,7 @@ export const uploadCSV = async (req, res) => {
         (p) => p.toLowerCase() === rawPlatform.toLowerCase()
       );
       if (!matchedPlatform) {
-        rowErrors.push(`Invalid platform "${rawPlatform}". Supported: ${VALID_PLATFORMS.join(', ')}`);
+        rowErrors.push(`Invalid platform "${shown(rawPlatform)}". Supported: ${VALID_PLATFORMS.join(', ')}`);
       }
 
       // Validate Content Type
@@ -110,26 +140,29 @@ export const uploadCSV = async (req, res) => {
         (t) => t.toLowerCase() === rawContentType.toLowerCase()
       );
       if (!matchedContentType) {
-        rowErrors.push(`Invalid content_type "${rawContentType}". Supported: ${VALID_CONTENT_TYPES.join(', ')}`);
+        rowErrors.push(`Invalid content_type "${shown(rawContentType)}". Supported: ${VALID_CONTENT_TYPES.join(', ')}`);
       }
 
       // Validate Category
       if (!rawCategory) {
         rowErrors.push('Missing category');
+      } else if (rawCategory.length > MAX_CATEGORY_LENGTH) {
+        rowErrors.push(`category cannot exceed ${MAX_CATEGORY_LENGTH} characters`);
       }
 
       // Validate Posting Hour (0-23)
       const rawHour = row.posting_hour;
-      const parsedHour = Number(rawHour);
-      if (rawHour === '' || isNaN(parsedHour) || !Number.isInteger(parsedHour) || parsedHour < 0 || parsedHour > 23) {
-        rowErrors.push(`posting_hour must be an integer between 0 and 23 (got "${rawHour}")`);
+      const parsedHour = parsePostingHour(rawHour);
+      if (parsedHour === null) {
+        rowErrors.push(`posting_hour must be an integer between 0 and 23 (got "${shown(rawHour)}")`);
       }
 
       // Validate Numeric Metrics
       const parseMetric = (colName) => {
         const val = Number(row[colName]);
-        if (isNaN(val)) {
-          rowErrors.push(`${colName} must be a number (got "${row[colName]}")`);
+        // Number.isFinite also rejects "Infinity"
+        if (!Number.isFinite(val)) {
+          rowErrors.push(`${colName} must be a number (got "${shown(row[colName])}")`);
           return 0;
         }
         if (val < 0) {
@@ -202,9 +235,19 @@ export const uploadCSV = async (req, res) => {
 
     // 6. Insert valid records into MongoDB
     let importedRows = 0;
+    let skippedDuplicates = 0;
     if (validRecords.length > 0) {
-      const inserted = await Post.insertMany(validRecords, { ordered: false });
-      importedRows = inserted.length;
+      try {
+        const inserted = await Post.insertMany(validRecords, { ordered: false });
+        importedRows = inserted.length;
+      } catch (insertError) {
+        // ordered:false keeps inserting after a duplicate-key error (e.g. a concurrent upload of the
+        // same post_id); report what was actually saved instead of failing the whole request
+        const duplicates = (insertError.writeErrors || []).filter((e) => (e.code ?? e.err?.code) === 11000);
+        if (insertError.code !== 11000 && duplicates.length === 0) throw insertError;
+        importedRows = insertError.insertedDocs?.length ?? insertError.result?.insertedCount ?? 0;
+        skippedDuplicates = validRecords.length - importedRows;
+      }
     }
 
     res.status(200).json({
@@ -213,11 +256,13 @@ export const uploadCSV = async (req, res) => {
       validRows: validRecords.length,
       invalidRows: errorRows.length,
       importedRows,
-      errors: errorRows,
+      skippedDuplicates,
+      errors: errorRows.slice(0, MAX_REPORTED_ERRORS),
+      errorsTruncated: errorRows.length > MAX_REPORTED_ERRORS,
       preview: previewRows,
     });
   } catch (error) {
     console.error('CSV upload error:', error);
-    res.status(500).json({ error: error.message || 'Server error processing CSV file' });
+    res.status(500).json({ error: 'Server error processing CSV file' });
   }
 };

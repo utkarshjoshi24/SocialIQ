@@ -9,6 +9,7 @@ const postSchema = new mongoose.Schema(
       type: String,
       required: [true, 'Post ID is required'],
       trim: true,
+      maxlength: [64, 'Post ID cannot exceed 64 characters'],
     },
     userId: {
       type: mongoose.Schema.Types.ObjectId,
@@ -41,6 +42,7 @@ const postSchema = new mongoose.Schema(
       type: String,
       required: [true, 'Category is required'],
       trim: true,
+      maxlength: [50, 'Category cannot exceed 50 characters'],
     },
     captionLength: {
       type: Number,

@@ -22,7 +22,10 @@ const CSV_COLUMNS = [
 ];
 
 const csvCell = (value) => {
-  const text = value === undefined || value === null ? '' : String(value);
+  let text = value === undefined || value === null ? '' : String(value);
+  // Text starting with = + - @ (or tab/CR) is run as a formula by spreadsheet apps
+  // (CSV injection); prefix it so it is shown as plain text. Numbers are never affected.
+  if (typeof value === 'string' && /^[=+\-@\t\r]/.test(text)) text = `'${text}`;
   return /[",\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
 };
 
