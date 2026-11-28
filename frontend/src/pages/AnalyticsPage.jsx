@@ -56,11 +56,85 @@ export default function AnalyticsPage() {
 
   // Extract filter options
   const filterOptions = data?.filterOptions || {};
-  const platforms = filterOptions.platforms || ['Instagram', 'YouTube', 'LinkedIn'];
-  const contentTypes = filterOptions.contentTypes || ['Reel', 'Carousel', 'Video', 'Image'];
-  const categories = filterOptions.categories || ['Travel', 'Tech', 'Education', 'Community', 'Lifestyle'];
+  const platforms = filterOptions.platforms || [];
+  const contentTypes = filterOptions.contentTypes || [];
+  const categories = filterOptions.categories || [];
 
   const totalPosts = data?.totalPosts || 0;
+
+  // Filter Bar (shared by the results and "no results" views)
+  const filterBar = (
+    <section className="bg-surface border border-outline-variant rounded-lg p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+      {/* Platform */}
+      <select
+        value={platform}
+        onChange={(e) => setPlatform(e.target.value)}
+        className="w-full px-3 py-2 rounded bg-surface-elevated border border-outline text-on-surface font-body text-body-md focus:border-primary focus:outline-none"
+      >
+        <option value="All">All Platforms</option>
+        {platforms.map((p) => (
+          <option key={p} value={p}>{p}</option>
+        ))}
+      </select>
+
+      {/* Content Type */}
+      <select
+        value={contentType}
+        onChange={(e) => setContentType(e.target.value)}
+        className="w-full px-3 py-2 rounded bg-surface-elevated border border-outline text-on-surface font-body text-body-md focus:border-primary focus:outline-none"
+      >
+        <option value="All">All Types</option>
+        {contentTypes.map((t) => (
+          <option key={t} value={t}>{t}</option>
+        ))}
+      </select>
+
+      {/* Category */}
+      <select
+        value={category}
+        onChange={(e) => setCategory(e.target.value)}
+        className="w-full px-3 py-2 rounded bg-surface-elevated border border-outline text-on-surface font-body text-body-md focus:border-primary focus:outline-none"
+      >
+        <option value="All">All Categories</option>
+        {categories.map((c) => (
+          <option key={c} value={c}>{c}</option>
+        ))}
+      </select>
+
+      {/* Start Date */}
+      <input
+        type="date"
+        value={startDate}
+        max={endDate || undefined}
+        aria-label="Start date"
+        onChange={(e) => setStartDate(e.target.value)}
+        className="w-full px-3 py-2 rounded bg-surface-elevated border border-outline text-on-surface font-body text-body-md focus:border-primary focus:outline-none"
+        placeholder="Start date"
+      />
+
+      {/* End Date */}
+      <input
+        type="date"
+        value={endDate}
+        min={startDate || undefined}
+        aria-label="End date"
+        onChange={(e) => setEndDate(e.target.value)}
+        className="w-full px-3 py-2 rounded bg-surface-elevated border border-outline text-on-surface font-body text-body-md focus:border-primary focus:outline-none"
+        placeholder="End date"
+      />
+    </section>
+  );
+
+  const filtersActive =
+    platform !== 'All' || contentType !== 'All' || category !== 'All' || Boolean(startDate) || Boolean(endDate);
+
+  const resetFilters = () => {
+    setPlatform('All');
+    setContentType('All');
+    setCategory('All');
+    setStartDate('');
+    setEndDate('');
+  };
 
   // ----- Loading State -----
   if (loading) {
@@ -70,7 +144,7 @@ export default function AnalyticsPage() {
           <h1 className="font-headline text-headline-lg text-on-surface">Analytics</h1>
           <p className="font-body text-body-md text-text-secondary mt-1">Loading analytics…</p>
         </div>
-        <div className="bg-surface border border-outline-variant rounded-lg p-5 animate-pulse h-20" />
+        {data ? filterBar : <div className="bg-surface border border-outline-variant rounded-lg p-5 animate-pulse h-20" />}
         <div className="bg-surface border border-outline-variant rounded-lg p-5 animate-pulse h-64" />
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <div className="bg-surface border border-outline-variant rounded-lg p-5 animate-pulse h-52" />
@@ -90,6 +164,7 @@ export default function AnalyticsPage() {
             Descriptive and diagnostic performance metrics across your dataset.
           </p>
         </div>
+        {data && filterBar}
         <div className="p-4 rounded-lg bg-error-container border border-error/20 text-on-error-container font-body text-body-sm flex items-center justify-between">
           <div className="flex items-center gap-2">
             <span className="material-symbols-outlined text-[20px]">error</span>
@@ -103,6 +178,39 @@ export default function AnalyticsPage() {
             Retry
           </button>
         </div>
+      </main>
+    );
+  }
+
+  // ----- No Results State (filters matched nothing, but the dataset has posts) -----
+  if (data?.isEmpty && data.datasetPosts > 0) {
+    return (
+      <main className="flex-1 px-6 py-6 max-w-[1280px] w-full mx-auto flex flex-col gap-6">
+        <div>
+          <h1 className="font-headline text-headline-lg text-on-surface">Analytics</h1>
+          <p className="font-body text-body-md text-text-secondary mt-1">
+            Descriptive and diagnostic performance metrics across your dataset.
+          </p>
+        </div>
+        {filterBar}
+        <section className="bg-surface border border-outline-variant rounded-lg p-12 text-center flex flex-col items-center gap-3">
+          <div className="w-12 h-12 rounded-full bg-surface-elevated border border-outline flex items-center justify-center text-text-muted">
+            <span className="material-symbols-outlined text-[24px]">filter_alt_off</span>
+          </div>
+          <h2 className="font-title text-headline-md text-on-surface">No posts match these filters</h2>
+          <p className="font-body text-body-sm text-text-secondary max-w-sm">
+            None of your {data.datasetPosts} posts fall within the selected platform, type, category and date range.
+          </p>
+          {filtersActive && (
+            <button
+              type="button"
+              onClick={resetFilters}
+              className="mt-2 px-4 py-1.5 rounded bg-surface-elevated border border-outline text-primary font-label text-label-md hover:bg-surface-hover"
+            >
+              Reset Filters
+            </button>
+          )}
+        </section>
       </main>
     );
   }
@@ -154,62 +262,7 @@ export default function AnalyticsPage() {
         </p>
       </div>
 
-      {/* Filter Bar */}
-      <section className="bg-surface border border-outline-variant rounded-lg p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
-        {/* Platform */}
-        <select
-          value={platform}
-          onChange={(e) => setPlatform(e.target.value)}
-          className="w-full px-3 py-2 rounded bg-surface-elevated border border-outline text-on-surface font-body text-body-md focus:border-primary focus:outline-none"
-        >
-          <option value="All">All Platforms</option>
-          {platforms.map((p) => (
-            <option key={p} value={p}>{p}</option>
-          ))}
-        </select>
-
-        {/* Content Type */}
-        <select
-          value={contentType}
-          onChange={(e) => setContentType(e.target.value)}
-          className="w-full px-3 py-2 rounded bg-surface-elevated border border-outline text-on-surface font-body text-body-md focus:border-primary focus:outline-none"
-        >
-          <option value="All">All Types</option>
-          {contentTypes.map((t) => (
-            <option key={t} value={t}>{t}</option>
-          ))}
-        </select>
-
-        {/* Category */}
-        <select
-          value={category}
-          onChange={(e) => setCategory(e.target.value)}
-          className="w-full px-3 py-2 rounded bg-surface-elevated border border-outline text-on-surface font-body text-body-md focus:border-primary focus:outline-none"
-        >
-          <option value="All">All Categories</option>
-          {categories.map((c) => (
-            <option key={c} value={c}>{c}</option>
-          ))}
-        </select>
-
-        {/* Start Date */}
-        <input
-          type="date"
-          value={startDate}
-          onChange={(e) => setStartDate(e.target.value)}
-          className="w-full px-3 py-2 rounded bg-surface-elevated border border-outline text-on-surface font-body text-body-md focus:border-primary focus:outline-none"
-          placeholder="Start date"
-        />
-
-        {/* End Date */}
-        <input
-          type="date"
-          value={endDate}
-          onChange={(e) => setEndDate(e.target.value)}
-          className="w-full px-3 py-2 rounded bg-surface-elevated border border-outline text-on-surface font-body text-body-md focus:border-primary focus:outline-none"
-          placeholder="End date"
-        />
-      </section>
+      {filterBar}
 
       {/* 1. Descriptive Statistics Section */}
       {descriptiveStats.length > 0 && (

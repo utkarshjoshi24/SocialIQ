@@ -51,6 +51,15 @@ export const authService = {
     });
     return handleResponse(res);
   },
+
+  updateMe: async (profile) => {
+    const res = await fetch(`${API_BASE}/auth/me`, {
+      method: 'PUT',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(profile),
+    });
+    return handleResponse(res);
+  },
 };
 
 // Posts CRUD Services
@@ -97,6 +106,15 @@ export const postService = {
 
   delete: async (id) => {
     const res = await fetch(`${API_BASE}/posts/${id}`, {
+      method: 'DELETE',
+      headers: getAuthHeaders(),
+    });
+    return handleResponse(res);
+  },
+
+  // Permanently deletes every post in the user's workspace
+  deleteAll: async () => {
+    const res = await fetch(`${API_BASE}/posts?confirm=DELETE`, {
       method: 'DELETE',
       headers: getAuthHeaders(),
     });

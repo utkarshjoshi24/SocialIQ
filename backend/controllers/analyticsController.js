@@ -31,7 +31,9 @@ const toAnalyticsRecords = (posts) =>
     comments: Number(p.comments) || 0,
     shares: Number(p.shares) || 0,
     saves: Number(p.saves) || 0,
-    reach: Number(p.reach) || Number(p.views) || 0,
+    // No views fallback: engagement rate is undefined without reach (data dictionary),
+    // and the stored Post.engagementRate is already 0 in that case — keep them consistent
+    reach: Number(p.reach) || 0,
     engagement_rate: Number(p.engagementRate) || 0,
   }));
 
@@ -200,9 +202,18 @@ export const getAnalytics = async (req, res) => {
       query.category = category;
     }
     if (startDate || endDate) {
+      const start = startDate ? new Date(startDate) : null;
+      const end = endDate ? new Date(endDate) : null;
+      if ((start && isNaN(start.getTime())) || (end && isNaN(end.getTime()))) {
+        return res.status(400).json({ error: 'startDate and endDate must be valid dates (YYYY-MM-DD)' });
+      }
+      if (start && end && start > end) {
+        return res.status(400).json({ error: 'startDate must be on or before endDate' });
+      }
       query.date = {};
-      if (startDate) query.date.$gte = new Date(startDate);
-      if (endDate) query.date.$lte = new Date(endDate);
+      if (start) query.date.$gte = start;
+      // endDate is inclusive: include every post up to the end of that day
+      if (end) query.date.$lt = new Date(end.getTime() + 24 * 60 * 60 * 1000);
     }
 
     // 1. Fetch filtered posts
@@ -214,16 +225,16 @@ export const getAnalytics = async (req, res) => {
     const contentTypes = Array.from(new Set(userMetaPosts.map((p) => p.contentType).filter(Boolean)));
     const categories = Array.from(new Set(userMetaPosts.map((p) => p.category).filter(Boolean)));
 
-    const filterOptions = {
-      platforms: platforms.length > 0 ? platforms : ['Instagram', 'YouTube', 'LinkedIn'],
-      contentTypes: contentTypes.length > 0 ? contentTypes : ['Reel', 'Carousel', 'Video', 'Image'],
-      categories: categories.length > 0 ? categories : ['Travel', 'Tech', 'Education', 'Community', 'Lifestyle'],
-    };
+    // Only values that exist in the user's data
+    const filterOptions = { platforms, contentTypes, categories };
+    // Lets the UI tell "no data at all" apart from "filters matched nothing"
+    const datasetPosts = userMetaPosts.length;
 
     // If no posts found, return standard clean empty payload
     if (posts.length === 0) {
       return res.json({
         totalPosts: 0,
+        datasetPosts,
         isEmpty: true,
         filterOptions,
         kpis: {
@@ -237,12 +248,7 @@ export const getAnalytics = async (req, res) => {
           total_saves: 0,
           average_views: 0.0,
         },
-        overviewKpiCards: [
-          { label: 'TOTAL POSTS', value: '0', delta: '0.0%', icon: 'layers', isPositive: true },
-          { label: 'TOTAL VIEWS', value: '0', delta: '0.0%', icon: 'visibility', isPositive: true },
-          { label: 'TOTAL LIKES', value: '0', delta: '0.0%', icon: 'favorite', isPositive: true },
-          { label: 'ENGAGEMENT RATE', value: '0.0%', delta: '0.0%', icon: 'bolt', isPositive: true },
-        ],
+        overviewKpiCards: [],
         timeSeries: [],
         formatPerformance: [],
         topPosts: [],
@@ -287,22 +293,17 @@ export const getAnalytics = async (req, res) => {
     pyProcess.on('close', (code) => {
       if (code !== 0) {
         console.error(`[Analytics Bridge Error] Code: ${code}, Stderr: ${errorData}`);
-        return res.status(500).json({
-          error: 'Failed to compute analytics on dataset',
-          details: errorData || `Process exited with code ${code}`,
-        });
+        return res.status(500).json({ error: 'Failed to compute analytics on dataset' });
       }
 
       try {
         const analyticsResult = JSON.parse(outputData);
         analyticsResult.filterOptions = filterOptions;
+        analyticsResult.datasetPosts = datasetPosts;
         return res.json(analyticsResult);
       } catch (parseErr) {
         console.error('[Analytics Bridge JSON Parse Error]', parseErr, outputData);
-        return res.status(500).json({
-          error: 'Invalid response from analytics engine',
-          details: parseErr.message,
-        });
+        return res.status(500).json({ error: 'Invalid response from analytics engine' });
       }
     });
 
@@ -311,6 +312,6 @@ export const getAnalytics = async (req, res) => {
     pyProcess.stdin.end();
   } catch (err) {
     console.error('[Analytics Controller Error]', err);
-    return res.status(500).json({ error: 'Server error processing analytics', message: err.message });
+    return res.status(500).json({ error: 'Server error processing analytics' });
   }
 };

@@ -47,8 +47,16 @@ app.use((req, res) => {
 
 // Global error handler
 app.use((err, req, res, next) => {
+  // Malformed JSON bodies are client errors, not server errors
+  if (err.type === 'entity.parse.failed') {
+    return res.status(400).json({ error: 'Request body must be valid JSON' });
+  }
+  if (err.code === 'LIMIT_FILE_SIZE') {
+    return res.status(400).json({ error: 'File is too large (max 50 MB)' });
+  }
   console.error('Unhandled server error:', err);
-  res.status(500).json({ error: err.message || 'Internal server error' });
+  // Details stay in the server log
+  res.status(500).json({ error: 'Internal server error' });
 });
 
 // Start server if run directly

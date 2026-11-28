@@ -3,8 +3,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 export default function LoginPage() {
-  const [email, setEmail] = useState('utkarsh@socialiq.app');
-  const [password, setPassword] = useState('password123');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const { login } = useAuth();
@@ -80,7 +80,7 @@ export default function LoginPage() {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="utkarsh@socialiq.app"
+                placeholder="you@example.com"
                 className="rounded bg-surface-elevated border border-outline px-3 py-2.5 font-body text-body-md text-on-surface placeholder:text-text-muted focus:border-primary focus:outline-none"
               />
             </label>

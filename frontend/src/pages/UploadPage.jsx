@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
+import { Link } from 'react-router-dom';
 import { uploadService } from '../services/api';
-import { mockCsvPreviewRows } from '../data/mockData';
 
 export default function UploadPage() {
   const [dragActive, setDragActive] = useState(false);
@@ -65,11 +65,13 @@ export default function UploadPage() {
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
-  const previewList = uploadResult?.preview || mockCsvPreviewRows;
-  const totalRows = uploadResult?.totalRows ?? 148;
-  const validRows = uploadResult?.validRows ?? 148;
+  // Everything below comes from the upload response; nothing is shown before a file is processed
+  const previewList = uploadResult?.preview || [];
+  const formatCount = (n) => (uploadResult ? Number(n || 0).toLocaleString() : '—');
+  const totalRows = uploadResult?.totalRows ?? 0;
+  const validRows = uploadResult?.validRows ?? 0;
   const invalidRows = uploadResult?.invalidRows ?? 0;
-  const importedRows = uploadResult?.importedRows ?? 148;
+  const importedRows = uploadResult?.importedRows ?? 0;
   const errorsList = uploadResult?.errors || [];
 
   return (
@@ -159,12 +161,25 @@ export default function UploadPage() {
         {/* Upload Success Badge */}
         {uploadResult && (
           <div className="flex items-center gap-3">
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded bg-success-container text-on-success-container border border-success/20 font-label text-label-md">
-              <span className="material-symbols-outlined text-[16px]">check_circle</span>
+            <span
+              className={`inline-flex items-center gap-1.5 px-3 py-1 rounded font-label text-label-md border ${
+                importedRows > 0
+                  ? 'bg-success-container text-on-success-container border-success/20'
+                  : 'bg-warning-container text-on-warning-container border-warning/20'
+              }`}
+            >
+              <span className="material-symbols-outlined text-[16px]">{importedRows > 0 ? 'check_circle' : 'warning'}</span>
               <span>
-                {importedRows > 0 ? `Successfully imported ${importedRows} posts` : 'Validation complete'}
+                {importedRows > 0
+                  ? `Successfully imported ${importedRows} post${importedRows === 1 ? '' : 's'}`
+                  : 'No rows were imported — see the validation errors below'}
               </span>
             </span>
+            {importedRows > 0 && (
+              <Link to="/posts" className="text-primary hover:underline font-label text-label-md">
+                View posts
+              </Link>
+            )}
             <button
               type="button"
               onClick={handleReset}
@@ -212,28 +227,28 @@ export default function UploadPage() {
         <div className="bg-surface border border-outline-variant rounded-lg p-4 flex items-center justify-between">
           <span className="font-label text-label-md text-text-secondary">Rows detected</span>
           <span className="font-kpi text-headline-lg text-on-surface tabular-nums">
-            {totalRows.toLocaleString()}
+            {formatCount(totalRows)}
           </span>
         </div>
 
         <div className="bg-surface border border-outline-variant rounded-lg p-4 flex items-center justify-between">
           <span className="font-label text-label-md text-text-secondary">Valid rows</span>
           <span className="font-kpi text-headline-lg text-success tabular-nums">
-            {validRows.toLocaleString()}
+            {formatCount(validRows)}
           </span>
         </div>
 
         <div className="bg-surface border border-outline-variant rounded-lg p-4 flex items-center justify-between">
           <span className="font-label text-label-md text-text-secondary">Invalid rows</span>
           <span className={`font-kpi text-headline-lg tabular-nums ${invalidRows > 0 ? 'text-error' : 'text-text-muted'}`}>
-            {invalidRows.toLocaleString()}
+            {formatCount(invalidRows)}
           </span>
         </div>
 
         <div className="bg-surface border border-outline-variant rounded-lg p-4 flex items-center justify-between">
           <span className="font-label text-label-md text-text-secondary">Imported</span>
           <span className="font-kpi text-headline-lg text-primary tabular-nums">
-            {importedRows.toLocaleString()}
+            {formatCount(importedRows)}
           </span>
         </div>
       </section>
@@ -272,7 +287,7 @@ export default function UploadPage() {
       <section className="bg-surface border border-outline-variant rounded-lg overflow-hidden flex flex-col">
         <div className="px-5 py-3.5 border-b border-outline-variant flex items-center justify-between">
           <span className="font-title text-title-sm text-on-surface">
-            {selectedFile ? `Dataset Preview (${selectedFile.name})` : 'Dataset Preview (Sample Format)'}
+            {selectedFile ? `Dataset Preview (${selectedFile.name}, first 10 rows)` : 'Dataset Preview'}
           </span>
           <button
             type="button"
@@ -296,6 +311,13 @@ export default function UploadPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-outline-variant font-mono text-mono-sm">
+              {previewList.length === 0 && (
+                <tr>
+                  <td colSpan={7} className="px-4 py-8 text-center font-body text-body-sm text-text-muted">
+                    {isUploading ? 'Processing file…' : 'Upload a CSV file to preview its first rows here.'}
+                  </td>
+                </tr>
+              )}
               {previewList.map((row, idx) => (
                 <tr key={idx} className="hover:bg-surface-elevated/40 transition-colors">
                   <td className="px-4 py-3 font-medium text-on-surface">{row.post_id}</td>

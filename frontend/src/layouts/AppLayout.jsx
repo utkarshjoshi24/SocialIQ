@@ -23,7 +23,8 @@ export default function AppLayout() {
     navigate('/login');
   };
 
-  const displayName = user?.name || 'Utkarsh';
+  const displayName = user?.name || 'Account';
+  const todayLabel = new Date().toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
   const displayInitial = displayName.charAt(0).toUpperCase();
 
   return (
@@ -88,7 +89,7 @@ export default function AppLayout() {
               </span>
               <div className="min-w-0">
                 <p className="font-title text-body-sm text-on-surface truncate">{displayName}</p>
-                <p className="font-mono text-mono-sm text-text-muted truncate">Creator Pro</p>
+                <p className="font-mono text-mono-sm text-text-muted truncate">{user?.email}</p>
               </div>
             </div>
             <button
@@ -190,8 +191,8 @@ export default function AppLayout() {
       {/* Main Content Column */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Compact Sticky Top Header */}
-        <header className="h-14 sticky top-0 z-20 bg-background/95 backdrop-blur-sm border-b border-outline-variant px-6 flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
+        <header className="h-14 sticky top-0 z-20 bg-background/95 backdrop-blur-sm border-b border-outline-variant px-4 sm:px-6 flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3 min-w-0">
             <button
               type="button"
               onClick={() => setMobileMenuOpen(true)}
@@ -200,36 +201,29 @@ export default function AppLayout() {
             >
               <span className="material-symbols-outlined text-[18px]">menu</span>
             </button>
-            <div className="flex items-center gap-2">
-              <span className="font-mono text-mono-sm text-text-muted">Workspace</span>
-              <span className="text-text-muted">/</span>
-              <span className="font-title text-body-sm text-on-surface">{displayName} Studio</span>
+            <div className="flex items-center gap-2 min-w-0">
+              <span className="hidden sm:inline font-mono text-mono-sm text-text-muted">Workspace</span>
+              <span className="hidden sm:inline text-text-muted">/</span>
+              <span className="font-title text-body-sm text-on-surface truncate">{displayName} Studio</span>
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
-            {/* Date Range Selector Pill */}
-            <button
-              type="button"
-              className="inline-flex items-center gap-2 px-3 py-1.5 rounded bg-surface border border-outline-variant hover:border-outline text-text-secondary hover:text-on-surface font-body text-body-sm transition-colors duration-state-change"
-            >
+          <div className="flex items-center gap-3 shrink-0">
+            {/* Date Pill — today's date. Date filtering lives on the Analytics and Compare pages,
+                so this is informational rather than a (non-functional) range picker. */}
+            <span className="hidden md:inline-flex items-center gap-2 px-3 py-1.5 rounded bg-surface border border-outline-variant text-text-secondary font-body text-body-sm">
               <span className="material-symbols-outlined text-[16px] text-primary">calendar_today</span>
-              <span className="tabular-nums whitespace-nowrap">Nov 1 – 27</span>
-              <span className="material-symbols-outlined text-[16px]">expand_more</span>
-            </button>
+              <span className="tabular-nums whitespace-nowrap">{todayLabel}</span>
+            </span>
 
             {/* Notification Bell */}
             <button
               type="button"
               aria-label="Notifications"
+              title="No notifications"
               className="relative inline-flex items-center justify-center w-9 h-9 rounded bg-surface text-text-secondary border border-outline-variant hover:bg-surface-elevated hover:text-on-surface transition-colors duration-state-change"
             >
               <span className="material-symbols-outlined text-[18px]">notifications</span>
-              <span
-                role="status"
-                aria-label="Unread notifications"
-                className="absolute top-2 right-2 w-1.5 h-1.5 rounded-full bg-primary"
-              />
             </button>
 
             {/* Profile Avatar Button */}

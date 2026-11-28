@@ -1,6 +1,60 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { Link } from 'react-router-dom';
 import { postService } from '../services/api';
-import { mockPosts } from '../data/mockData';
+
+// Allowed values mirror backend/models/Post.js enums
+const PLATFORMS = ['Instagram', 'YouTube', 'LinkedIn', 'Twitter/X', 'TikTok', 'Facebook'];
+const CONTENT_TYPES = ['Reel', 'Carousel', 'Video', 'Image', 'Text'];
+// Category is free text in the backend; these are offered by default and any
+// category already present in the user's posts is added to the lists
+const DEFAULT_CATEGORIES = ['Travel', 'Tech', 'Education', 'Community', 'Lifestyle', 'Finance', 'Health'];
+const PAGE_SIZE = 20;
+
+const today = () => new Date().toISOString().split('T')[0];
+
+const emptyForm = () => ({
+  postId: '',
+  date: today(),
+  platform: 'Instagram',
+  contentType: 'Reel',
+  category: 'Travel',
+  postingHour: 20,
+  captionLength: 120,
+  hashtagsCount: 7,
+  durationSeconds: 28,
+  views: '',
+  likes: '',
+  comments: '',
+  shares: '',
+  saves: '',
+  reach: '',
+});
+
+const formFromPost = (post) => ({
+  postId: post.postId,
+  date: post.date ? new Date(post.date).toISOString().split('T')[0] : today(),
+  platform: post.platform,
+  contentType: post.contentType,
+  category: post.category,
+  postingHour: post.postingHour ?? 0,
+  captionLength: post.captionLength ?? 0,
+  hashtagsCount: post.hashtagsCount ?? 0,
+  durationSeconds: post.durationSeconds ?? 0,
+  views: post.views ?? '',
+  likes: post.likes ?? '',
+  comments: post.comments ?? '',
+  shares: post.shares ?? '',
+  saves: post.saves ?? '',
+  reach: post.reach ?? '',
+});
+
+const CONTENT_ICONS = {
+  Reel: 'play_circle',
+  Carousel: 'view_carousel',
+  Video: 'videocam',
+  Image: 'image',
+  Text: 'article',
+};
 
 export default function PostsPage() {
   const [posts, setPosts] = useState([]);
@@ -16,27 +70,17 @@ export default function PostsPage() {
   const [sortField, setSortField] = useState('views');
   const [sortAsc, setSortAsc] = useState(false);
 
-  // Modals & form state
+  const [page, setPage] = useState(1);
+  // Categories seen in any fetched result (the first load is unfiltered, so it sees them all)
+  const [knownCategories, setKnownCategories] = useState(DEFAULT_CATEGORIES);
+
+  // Modals & form state (editingId is set when the modal edits an existing post)
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [editingId, setEditingId] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [modalError, setModalError] = useState('');
 
-  const [newPost, setNewPost] = useState({
-    postId: '',
-    platform: 'Instagram',
-    contentType: 'Reel',
-    category: 'Travel',
-    postingHour: 20,
-    captionLength: 120,
-    hashtagsCount: 7,
-    durationSeconds: 28,
-    views: '',
-    likes: '',
-    comments: '',
-    shares: '',
-    saves: '',
-    reach: '',
-  });
+  const [newPost, setNewPost] = useState(emptyForm);
 
   // Fetch posts from API
   const fetchPosts = useCallback(async () => {
@@ -52,6 +96,7 @@ export default function PostsPage() {
 
       if (res.success) {
         setPosts(res.data);
+        setKnownCategories((prev) => Array.from(new Set([...prev, ...res.data.map((p) => p.category).filter(Boolean)])));
       }
     } catch (err) {
       setError(err.message || 'Failed to load posts from database');
@@ -64,34 +109,17 @@ export default function PostsPage() {
     fetchPosts();
   }, [fetchPosts]);
 
-  // Seed initial starter dataset if user's workspace is fresh
-  const handleSeedStarterData = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      for (const p of mockPosts) {
-        await postService.create({
-          postId: p.id,
-          date: p.date,
-          platform: p.platform,
-          contentType: p.content_type,
-          category: p.category,
-          postingHour: 19,
-          views: p.views,
-          likes: p.likes,
-          comments: p.comments,
-          shares: p.shares,
-          saves: p.saves,
-          reach: p.views, // estimate
-        });
-      }
-      await fetchPosts();
-    } catch (err) {
-      setError('Failed to seed starter data: ' + err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
+  // Back to the first page whenever the result set changes
+  useEffect(() => {
+    setPage(1);
+  }, [searchQuery, selectedPlatform, selectedType, selectedCategory, selectedTier]);
+
+  const filtersActive =
+    Boolean(searchQuery) ||
+    selectedPlatform !== 'All' ||
+    selectedType !== 'All' ||
+    selectedCategory !== 'All' ||
+    selectedTier !== 'All';
 
   const handleResetFilters = () => {
     setSearchQuery('');
@@ -117,19 +145,38 @@ export default function PostsPage() {
       await postService.delete(id);
       setPosts((prev) => prev.filter((p) => p._id !== id));
     } catch (err) {
-      alert('Failed to delete post: ' + err.message);
+      setError(`Failed to delete post ${postId}: ${err.message}`);
     }
   };
 
-  // Create post
-  const handleCreatePost = async (e) => {
+  const openAddModal = () => {
+    setEditingId(null);
+    setNewPost(emptyForm());
+    setModalError('');
+    setIsAddModalOpen(true);
+  };
+
+  const openEditModal = (post) => {
+    setEditingId(post._id);
+    setNewPost(formFromPost(post));
+    setModalError('');
+    setIsAddModalOpen(true);
+  };
+
+  const closeModal = () => {
+    setIsAddModalOpen(false);
+    setEditingId(null);
+  };
+
+  // Create or update post
+  const handleSavePost = async (e) => {
     e.preventDefault();
     setModalError('');
     setIsSubmitting(true);
 
     try {
       const payload = {
-        postId: newPost.postId.trim() || undefined,
+        date: newPost.date,
         platform: newPost.platform,
         contentType: newPost.contentType,
         category: newPost.category.trim(),
@@ -142,32 +189,26 @@ export default function PostsPage() {
         comments: Number(newPost.comments) || 0,
         shares: Number(newPost.shares) || 0,
         saves: Number(newPost.saves) || 0,
-        reach: Number(newPost.reach) || Number(newPost.views) || 0,
+        // Reach is never estimated from views: without it engagement rate is 0 (undefined)
+        reach: Number(newPost.reach) || 0,
       };
 
-      const res = await postService.create(payload);
-      if (res.success) {
-        setPosts((prev) => [res.data, ...prev]);
-        setIsAddModalOpen(false);
-        setNewPost({
-          postId: '',
-          platform: 'Instagram',
-          contentType: 'Reel',
-          category: 'Travel',
-          postingHour: 20,
-          captionLength: 120,
-          hashtagsCount: 7,
-          durationSeconds: 28,
-          views: '',
-          likes: '',
-          comments: '',
-          shares: '',
-          saves: '',
-          reach: '',
-        });
+      if (editingId) {
+        const res = await postService.update(editingId, payload);
+        if (res.success) {
+          setPosts((prev) => prev.map((p) => (p._id === editingId ? res.data : p)));
+          closeModal();
+        }
+      } else {
+        const res = await postService.create({ ...payload, postId: newPost.postId.trim() || undefined });
+        if (res.success) {
+          setPosts((prev) => [res.data, ...prev]);
+          setKnownCategories((prev) => Array.from(new Set([...prev, res.data.category])));
+          closeModal();
+        }
       }
     } catch (err) {
-      setModalError(err.message || 'Failed to create post');
+      setModalError(err.message || 'Failed to save post');
     } finally {
       setIsSubmitting(false);
     }
@@ -189,6 +230,13 @@ export default function PostsPage() {
       return 0;
     });
 
+  const pageCount = Math.max(1, Math.ceil(displayedPosts.length / PAGE_SIZE));
+  const currentPage = Math.min(page, pageCount);
+  const pagePosts = displayedPosts.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+  const filterCategories = [...knownCategories].sort();
+
+  // Engagement-rate tier (High ≥ 7%, Medium ≥ 4%). This is NOT the Dashboard's
+  // performance-score tier, so the column is labelled "ER Tier".
   const getTier = (er = 0) => {
     if (er >= 7.0) return 'High';
     if (er >= 4.0) return 'Medium';
@@ -206,19 +254,9 @@ export default function PostsPage() {
           </p>
         </div>
         <div className="flex items-center gap-2 self-start sm:self-auto">
-          {posts.length === 0 && !loading && (
-            <button
-              type="button"
-              onClick={handleSeedStarterData}
-              className="inline-flex items-center gap-1.5 px-3 py-2 rounded bg-surface-elevated border border-outline text-text-secondary hover:text-on-surface font-label text-title-sm"
-            >
-              <span className="material-symbols-outlined text-[16px]">database</span>
-              <span>Load Starter Posts</span>
-            </button>
-          )}
           <button
             type="button"
-            onClick={() => setIsAddModalOpen(true)}
+            onClick={openAddModal}
             className="inline-flex items-center gap-2 px-3.5 py-2 rounded bg-primary text-on-primary font-label text-title-sm hover:opacity-95 transition-opacity shadow-sm"
           >
             <span className="material-symbols-outlined text-[18px]">add</span>
@@ -253,7 +291,7 @@ export default function PostsPage() {
             type="search"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search posts by title or tag..."
+            placeholder="Search by post ID, platform or category..."
             className="w-full pl-9 pr-3 py-2 rounded bg-surface-elevated border border-outline text-on-surface font-body text-body-md placeholder:text-text-muted focus:border-primary focus:outline-none"
           />
         </div>
@@ -265,9 +303,9 @@ export default function PostsPage() {
           className="w-full px-3 py-2 rounded bg-surface-elevated border border-outline text-on-surface font-body text-body-md focus:border-primary focus:outline-none"
         >
           <option value="All">All Platforms</option>
-          <option value="Instagram">Instagram</option>
-          <option value="YouTube">YouTube</option>
-          <option value="LinkedIn">LinkedIn</option>
+          {PLATFORMS.map((p) => (
+            <option key={p} value={p}>{p}</option>
+          ))}
         </select>
 
         {/* Content Type */}
@@ -277,10 +315,9 @@ export default function PostsPage() {
           className="w-full px-3 py-2 rounded bg-surface-elevated border border-outline text-on-surface font-body text-body-md focus:border-primary focus:outline-none"
         >
           <option value="All">All Types</option>
-          <option value="Reel">Reels</option>
-          <option value="Carousel">Carousels</option>
-          <option value="Video">Videos</option>
-          <option value="Image">Images</option>
+          {CONTENT_TYPES.map((t) => (
+            <option key={t} value={t}>{t}</option>
+          ))}
         </select>
 
         {/* Category */}
@@ -290,11 +327,9 @@ export default function PostsPage() {
           className="w-full px-3 py-2 rounded bg-surface-elevated border border-outline text-on-surface font-body text-body-md focus:border-primary focus:outline-none"
         >
           <option value="All">All Categories</option>
-          <option value="Travel">Travel</option>
-          <option value="Tech">Tech</option>
-          <option value="Education">Education</option>
-          <option value="Community">Community</option>
-          <option value="Lifestyle">Lifestyle</option>
+          {filterCategories.map((c) => (
+            <option key={c} value={c}>{c}</option>
+          ))}
         </select>
 
         {/* Performance Tier */}
@@ -303,7 +338,7 @@ export default function PostsPage() {
           onChange={(e) => setSelectedTier(e.target.value)}
           className="w-full px-3 py-2 rounded bg-surface-elevated border border-outline text-on-surface font-body text-body-md focus:border-primary focus:outline-none"
         >
-          <option value="All">All Performance</option>
+          <option value="All">All ER Tiers</option>
           <option value="High">High</option>
           <option value="Medium">Medium</option>
           <option value="Low">Low</option>
@@ -350,14 +385,14 @@ export default function PostsPage() {
                   >
                     Engagement {sortField === 'engagementRate' ? (sortAsc ? '↑' : '↓') : ''}
                   </th>
-                  <th className="px-5 py-3 font-label text-label-md uppercase tracking-wider text-text-muted text-right">Performance</th>
+                  <th className="px-5 py-3 font-label text-label-md uppercase tracking-wider text-text-muted text-right">ER Tier</th>
                   <th className="px-3 py-3 font-label text-label-md uppercase tracking-wider text-text-muted text-center">Action</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-outline-variant">
-                {displayedPosts.map((post) => {
+                {pagePosts.map((post) => {
                   const tier = getTier(post.engagementRate);
-                  const formattedDate = post.date ? new Date(post.date).toISOString().split('T')[0] : '2026-11-20';
+                  const formattedDate = post.date ? new Date(post.date).toISOString().split('T')[0] : '—';
 
                   return (
                     <tr key={post._id} className="hover:bg-surface-elevated/40 transition-colors">
@@ -365,11 +400,7 @@ export default function PostsPage() {
                         <div className="flex items-center gap-3">
                           <div className="w-9 h-9 rounded bg-surface-elevated border border-outline flex items-center justify-center shrink-0">
                             <span className="material-symbols-outlined text-[16px] text-primary">
-                              {post.contentType === 'Reel'
-                                ? 'play_circle'
-                                : post.contentType === 'Carousel'
-                                ? 'view_carousel'
-                                : 'videocam'}
+                              {CONTENT_ICONS[post.contentType] || 'article'}
                             </span>
                           </div>
                           <div className="min-w-0 max-w-[260px]">
@@ -408,7 +439,15 @@ export default function PostsPage() {
                           {tier}
                         </span>
                       </td>
-                      <td className="px-3 py-3.5 text-center">
+                      <td className="px-3 py-3.5 text-center whitespace-nowrap">
+                        <button
+                          type="button"
+                          onClick={() => openEditModal(post)}
+                          title="Edit post"
+                          className="text-text-muted hover:text-primary p-1 rounded transition-colors"
+                        >
+                          <span className="material-symbols-outlined text-[16px]">edit</span>
+                        </button>
                         <button
                           type="button"
                           onClick={() => handleDeletePost(post._id, post.postId)}
@@ -426,25 +465,28 @@ export default function PostsPage() {
           </div>
 
           {/* Pagination Controls */}
-          <div className="px-5 py-3 border-t border-outline-variant flex items-center justify-between text-body-sm text-text-secondary">
+          <div className="px-5 py-3 border-t border-outline-variant flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-body-sm text-text-secondary">
             <span className="font-mono text-mono-sm text-text-muted">
-              Showing {displayedPosts.length} post{displayedPosts.length !== 1 ? 's' : ''} in workspace
+              Showing {(currentPage - 1) * PAGE_SIZE + 1}–{(currentPage - 1) * PAGE_SIZE + pagePosts.length} of{' '}
+              {displayedPosts.length} post{displayedPosts.length !== 1 ? 's' : ''}
             </span>
             <div className="flex items-center gap-1.5">
               <button
                 type="button"
+                onClick={() => setPage(currentPage - 1)}
+                disabled={currentPage <= 1}
                 className="px-2.5 py-1 rounded bg-surface-elevated border border-outline text-text-secondary font-label text-label-md disabled:opacity-50"
-                disabled
               >
                 Previous
               </button>
-              <button type="button" className="px-2.5 py-1 rounded bg-primary text-on-primary font-label text-label-md">
-                1
-              </button>
+              <span className="px-2.5 py-1 rounded bg-primary text-on-primary font-label text-label-md tabular-nums">
+                {currentPage} / {pageCount}
+              </span>
               <button
                 type="button"
+                onClick={() => setPage(currentPage + 1)}
+                disabled={currentPage >= pageCount}
                 className="px-2.5 py-1 rounded bg-surface-elevated border border-outline text-text-secondary font-label text-label-md disabled:opacity-50"
-                disabled
               >
                 Next
               </button>
@@ -457,21 +499,31 @@ export default function PostsPage() {
           <div className="w-12 h-12 rounded-full bg-surface-elevated border border-outline flex items-center justify-center text-text-muted">
             <span className="material-symbols-outlined text-[24px]">search_off</span>
           </div>
-          <h2 className="font-title text-headline-md text-on-surface">No posts match your filters</h2>
+          <h2 className="font-title text-headline-md text-on-surface">
+            {posts.length === 0 && !filtersActive ? 'No posts yet' : 'No posts match your filters'}
+          </h2>
           <p className="font-body text-body-sm text-text-secondary max-w-sm">
-            {posts.length === 0
-              ? 'Your workspace has no posts yet. Click below to load the starter historical dataset or add your first post.'
-              : 'Try clearing your search query or adjusting the platform and content type filters.'}
+            {posts.length === 0 && !filtersActive
+              ? 'Upload a CSV dataset or add your first post manually.'
+              : 'Try clearing your search query or adjusting the platform, type, category and tier filters.'}
           </p>
           <div className="flex items-center gap-3 mt-2">
-            {posts.length === 0 ? (
-              <button
-                type="button"
-                onClick={handleSeedStarterData}
-                className="px-4 py-2 rounded bg-primary text-on-primary font-label text-title-sm font-medium hover:opacity-95"
-              >
-                Load Starter Dataset
-              </button>
+            {posts.length === 0 && !filtersActive ? (
+              <>
+                <Link
+                  to="/upload"
+                  className="px-4 py-2 rounded bg-primary text-on-primary font-label text-title-sm font-medium hover:opacity-95"
+                >
+                  Upload CSV
+                </Link>
+                <button
+                  type="button"
+                  onClick={openAddModal}
+                  className="px-4 py-1.5 rounded bg-surface-elevated border border-outline text-primary font-label text-label-md hover:bg-surface-hover"
+                >
+                  Add Post
+                </button>
+              </>
             ) : (
               <button
                 type="button"
@@ -488,12 +540,13 @@ export default function PostsPage() {
       {/* Add Post Modal */}
       {isAddModalOpen && (
         <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-surface border border-outline rounded-lg p-6 max-w-lg w-full flex flex-col gap-5 shadow-2xl">
+          <div className="bg-surface border border-outline rounded-lg p-6 max-w-lg w-full max-h-[90vh] overflow-y-auto flex flex-col gap-5 shadow-2xl">
             <div className="flex items-center justify-between border-b border-outline-variant pb-3">
-              <h2 className="font-title text-headline-md text-on-surface">Add New Post</h2>
+              <h2 className="font-title text-headline-md text-on-surface">{editingId ? `Edit Post ${newPost.postId}` : 'Add New Post'}</h2>
               <button
                 type="button"
-                onClick={() => setIsAddModalOpen(false)}
+                onClick={closeModal}
+                aria-label="Close"
                 className="text-text-muted hover:text-on-surface"
               >
                 <span className="material-symbols-outlined text-[20px]">close</span>
@@ -507,14 +560,15 @@ export default function PostsPage() {
               </div>
             )}
 
-            <form onSubmit={handleCreatePost} className="flex flex-col gap-4">
+            <form onSubmit={handleSavePost} className="flex flex-col gap-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <label className="flex flex-col gap-1.5">
-                  <span className="font-label text-label-md text-text-secondary">Post ID (Optional)</span>
+                  <span className="font-label text-label-md text-text-secondary">Post ID {editingId ? '' : '(Optional)'}</span>
                   <input
                     type="text"
                     placeholder="e.g. P149"
                     value={newPost.postId}
+                    disabled={Boolean(editingId)}
                     onChange={(e) => setNewPost({ ...newPost, postId: e.target.value })}
                     className="rounded bg-surface-elevated border border-outline px-3 py-2 text-on-surface font-body text-body-md focus:border-primary focus:outline-none"
                   />
@@ -527,12 +581,21 @@ export default function PostsPage() {
                     onChange={(e) => setNewPost({ ...newPost, category: e.target.value })}
                     className="rounded bg-surface-elevated border border-outline px-3 py-2 text-on-surface font-body text-body-md focus:border-primary focus:outline-none"
                   >
-                    <option value="Travel">Travel</option>
-                    <option value="Tech">Tech</option>
-                    <option value="Education">Education</option>
-                    <option value="Community">Community</option>
-                    <option value="Lifestyle">Lifestyle</option>
+                    {filterCategories.map((c) => (
+                      <option key={c} value={c}>{c}</option>
+                    ))}
                   </select>
+                </label>
+
+                <label className="flex flex-col gap-1.5 sm:col-span-2">
+                  <span className="font-label text-label-md text-text-secondary">Publish Date</span>
+                  <input
+                    type="date"
+                    required
+                    value={newPost.date}
+                    onChange={(e) => setNewPost({ ...newPost, date: e.target.value })}
+                    className="rounded bg-surface-elevated border border-outline px-3 py-2 text-on-surface font-body text-body-md focus:border-primary focus:outline-none"
+                  />
                 </label>
               </div>
 
@@ -544,9 +607,9 @@ export default function PostsPage() {
                     onChange={(e) => setNewPost({ ...newPost, platform: e.target.value })}
                     className="rounded bg-surface-elevated border border-outline px-3 py-2 text-on-surface font-body text-body-md focus:border-primary focus:outline-none"
                   >
-                    <option value="Instagram">Instagram</option>
-                    <option value="YouTube">YouTube</option>
-                    <option value="LinkedIn">LinkedIn</option>
+                    {PLATFORMS.map((p) => (
+                      <option key={p} value={p}>{p}</option>
+                    ))}
                   </select>
                 </label>
 
@@ -557,10 +620,9 @@ export default function PostsPage() {
                     onChange={(e) => setNewPost({ ...newPost, contentType: e.target.value })}
                     className="rounded bg-surface-elevated border border-outline px-3 py-2 text-on-surface font-body text-body-md focus:border-primary focus:outline-none"
                   >
-                    <option value="Reel">Reel</option>
-                    <option value="Carousel">Carousel</option>
-                    <option value="Video">Video</option>
-                    <option value="Image">Image</option>
+                    {CONTENT_TYPES.map((t) => (
+                      <option key={t} value={t}>{t}</option>
+                    ))}
                   </select>
                 </label>
 
@@ -640,7 +702,7 @@ export default function PostsPage() {
                   />
                 </label>
                 <label className="flex flex-col gap-1.5">
-                  <span className="font-label text-label-md text-text-secondary">Reach</span>
+                  <span className="font-label text-label-md text-text-secondary">Reach (needed for engagement rate)</span>
                   <input
                     type="number"
                     min="0"
@@ -655,7 +717,7 @@ export default function PostsPage() {
               <div className="flex items-center justify-end gap-3 pt-3 border-t border-outline-variant">
                 <button
                   type="button"
-                  onClick={() => setIsAddModalOpen(false)}
+                  onClick={closeModal}
                   className="px-4 py-2 rounded bg-surface-elevated border border-outline text-text-secondary hover:text-on-surface font-label text-label-md"
                 >
                   Cancel
@@ -665,7 +727,7 @@ export default function PostsPage() {
                   disabled={isSubmitting}
                   className="px-4 py-2 rounded bg-primary text-on-primary font-label text-label-md font-medium hover:opacity-95 disabled:opacity-50"
                 >
-                  {isSubmitting ? 'Saving...' : 'Save Post'}
+                  {isSubmitting ? 'Saving...' : editingId ? 'Save Changes' : 'Save Post'}
                 </button>
               </div>
             </form>

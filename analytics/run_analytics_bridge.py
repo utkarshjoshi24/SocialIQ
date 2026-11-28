@@ -12,6 +12,7 @@ import pandas as pd
 import numpy as np
 
 from preprocessing import prepare_dataset
+from insights import generate_insights
 from analytics import (
     calculate_overview_kpis,
     calculate_descriptive_statistics,
@@ -112,94 +113,56 @@ def compute_format_performance(content_analysis: List[Dict[str, Any]]) -> List[D
         })
     return results
 
-def compute_quick_insights(df: pd.DataFrame, content_analysis: List[Dict[str, Any]], day_analysis: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
-    """Generates 3 deterministic, data-driven quick insights from actual dataset."""
-    if df.empty or len(df) < 2:
+def compute_quick_insights(df: pd.DataFrame, limit: int = 3) -> List[Dict[str, Any]]:
+    """
+    Dashboard quick insights, taken from the rule-based insights engine (insights.py)
+    so the Dashboard and Insights page always agree and share its sample-size guards.
+    Prefers clear findings (strengths / warnings) over neutral "no clear leader" ones.
+    """
+    result = generate_insights(df)
+    if result['status'] != 'ok':
         return []
-    
-    insights = []
-    
-    # 1. Format insight
-    if content_analysis and len(content_analysis) >= 2:
-        top_fmt = content_analysis[0]
-        runner_up = content_analysis[1]
-        top_views = top_fmt.get('average_views', 0)
-        runner_views = runner_up.get('average_views', 1)
-        if runner_views > 0:
-            diff_pct = round(((top_views - runner_views) / runner_views) * 100)
-            if diff_pct > 0:
-                insights.append({
-                    'tag': 'Content Format',
-                    'tagColor': 'text-primary',
-                    'dotColor': 'bg-primary',
-                    'text': f"{top_fmt['content_type']}s outperform {runner_up['content_type'].lower()}s by {diff_pct}% in average views.",
-                    'highlight': f"{diff_pct}%",
-                })
-    if not insights and content_analysis:
-        top_fmt = content_analysis[0]
-        insights.append({
-            'tag': 'Content Format',
-            'tagColor': 'text-primary',
-            'dotColor': 'bg-primary',
-            'text': f"{top_fmt['content_type']} content leads your library with {format_number(top_fmt['average_views'])} average views.",
-            'highlight': f"{format_number(top_fmt['average_views'])}",
+
+    styles = {
+        'positive': ('text-success', 'bg-success'),
+        'warning': ('text-warning', 'bg-warning'),
+        'neutral': ('text-secondary', 'bg-secondary'),
+    }
+    ranked = sorted(result['insights'], key=lambda i: i['severity'] == 'neutral')  # stable sort
+    quick = []
+    for insight in ranked[:limit]:
+        tag_color, dot_color = styles.get(insight['severity'], styles['neutral'])
+        quick.append({
+            'tag': insight['category'],
+            'tagColor': tag_color,
+            'dotColor': dot_color,
+            'text': f"{insight['title']}: {insight['value']} {insight['metric'].lower()}.",
+            'highlight': insight['value'],
         })
-        
-    # 2. Timing / Day insight
-    if day_analysis:
-        sorted_days = sorted(day_analysis, key=lambda x: x.get('average_engagement_rate', 0), reverse=True)
-        if sorted_days and sorted_days[0].get('post_count', 0) > 0:
-            best_day = sorted_days[0]
-            insights.append({
-                'tag': 'Posting Window',
-                'tagColor': 'text-secondary',
-                'dotColor': 'bg-secondary',
-                'text': f"{best_day['day']} posts generate the highest responsiveness with {best_day['average_engagement_rate']}% average engagement.",
-                'highlight': f"{best_day['day']}",
-            })
-            
-    # 3. Retention / Category insight
-    if 'category' in df.columns:
-        cat_counts = df.groupby('category').size().to_dict()
-        if cat_counts:
-            top_cat = max(cat_counts, key=cat_counts.get)
-            insights.append({
-                'tag': 'Category Lead',
-                'tagColor': 'text-success',
-                'dotColor': 'bg-success',
-                'text': f"{top_cat} is your most active content vertical with {cat_counts[top_cat]} published posts.",
-                'highlight': f"{top_cat}",
-            })
-            
-    return insights
+    return quick
 
 def compute_heatmap_7x7(df: pd.DataFrame) -> List[List[int]]:
     """
-    Computes a 7 (days) x 7 (hours: 6am, 9am, 12pm, 3pm, 6pm, 9pm, 12am) density matrix.
-    Values 0 (low) to 3 (peak).
+    Computes a 7 (days) x 7 (hour windows) density matrix of mean engagement rate.
+    Columns are 3-hour windows starting at 6am, 9am, 12pm, 3pm, 6pm, 9pm, plus a
+    12am column covering midnight–6am, so every posting hour falls in exactly one cell.
+    Values 0 (low/no posts) to 3 (peak).
     """
-    target_hours = [6, 9, 12, 15, 18, 21, 0]
-    days_list = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+    hour_windows = [range(6, 9), range(9, 12), range(12, 15), range(15, 18), range(18, 21), range(21, 24), range(0, 6)]
     full_days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
-    
+
     if df.empty or 'day_of_week' not in df.columns or 'posting_hour' not in df.columns:
         return [[0]*7 for _ in range(7)]
-    
-    pivot = df.pivot_table(
-        index='day_of_week',
-        columns='posting_hour',
-        values='engagement_rate',
-        aggfunc='mean',
-        fill_value=0.0
-    )
-    
-    # Extract values for target hours
+
+    # Extract mean engagement rate per day × hour window
     values = []
     raw_matrix = []
     for full_day in full_days:
+        day_rows = df[df['day_of_week'] == full_day]
         row = []
-        for h in target_hours:
-            val = float(pivot.loc[full_day, h]) if (full_day in pivot.index and h in pivot.columns) else 0.0
+        for window in hour_windows:
+            cell = day_rows[day_rows['posting_hour'].isin(list(window))]['engagement_rate']
+            val = float(cell.mean()) if len(cell) else 0.0
             row.append(val)
             if val > 0:
                 values.append(val)
@@ -439,7 +402,7 @@ def main():
     correlation_analysis = calculate_correlation_analysis(df)
     time_series = compute_time_series(df)
     format_performance = compute_format_performance(content_analysis)
-    quick_insights = compute_quick_insights(df, content_analysis, day_analysis)
+    quick_insights = compute_quick_insights(df)
     heatmap_7x7 = compute_heatmap_7x7(df)
     formatted_top_posts = compute_formatted_top_posts(df, limit=5)
     formatted_corr = compute_formatted_correlation(correlation_analysis)
@@ -450,44 +413,55 @@ def main():
 
     total_posts = overview_kpis['total_posts']
     total_views = overview_kpis['total_views']
-    total_likes = overview_kpis['total_likes']
+    total_reach = overview_kpis['total_reach']
     er = overview_kpis['average_engagement_rate']
 
+    # Average of the per-post performance score, benchmarked against this dataset
+    scores = [calculate_performance_score(row, df)['score'] for _, row in df.iterrows()]
+    avg_score = round(float(np.mean(scores)), 1) if scores else 0.0
+    high_tier = sum(1 for s in scores if s >= 70)
+    median_er = float(df['engagement_rate'].median()) if total_posts else 0.0
+    platform_count = int(df['platform'].nunique())
+
+    # Every value and caption below is computed from the user's data; no period-over-period
+    # deltas are shown because the dashboard has no comparison period (see Compare page).
     kpi_cards = [
         {
             'label': 'TOTAL POSTS',
             'value': f"{total_posts:,}",
-            'delta': f"+{min(25, round(total_posts * 0.8, 1))}%",
+            'caption': f"across {platform_count} platform{'s' if platform_count != 1 else ''}",
             'icon': 'layers',
-            'isPositive': True,
         },
         {
             'label': 'TOTAL VIEWS',
             'value': format_number(total_views),
-            'delta': '+18.4%',
+            'caption': f"{format_number(overview_kpis['average_views'])} avg per post",
             'icon': 'visibility',
-            'isPositive': True,
         },
         {
-            'label': 'TOTAL LIKES',
-            'value': format_number(total_likes),
-            'delta': '+9.7%',
-            'icon': 'favorite',
-            'isPositive': True,
+            'label': 'TOTAL REACH',
+            'value': format_number(total_reach),
+            'caption': f"{format_number(total_reach / total_posts if total_posts else 0)} avg per post",
+            'icon': 'groups',
         },
         {
             'label': 'ENGAGEMENT RATE',
             'value': f"{er:.2f}%",
-            'delta': '+1.2%',
+            'caption': f"median {median_er:.2f}%",
             'icon': 'bolt',
-            'isPositive': True,
+        },
+        {
+            'label': 'PERFORMANCE SCORE',
+            'value': f"{avg_score:.1f}",
+            'caption': f"{high_tier} high-tier post{'s' if high_tier != 1 else ''}",
+            'icon': 'speed',
         },
     ]
 
     response_payload = {
         'totalPosts': total_posts,
         'isEmpty': False,
-        'kpis': overview_kpis,
+        'kpis': {**overview_kpis, 'average_performance_score': avg_score},
         'overviewKpiCards': kpi_cards,
         'timeSeries': time_series,
         'formatPerformance': format_performance,

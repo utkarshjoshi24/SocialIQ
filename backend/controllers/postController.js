@@ -1,6 +1,8 @@
 import mongoose from 'mongoose';
 import Post, { VALID_PLATFORMS, VALID_CONTENT_TYPES } from '../models/Post.js';
 
+const SORTABLE_FIELDS = ['date', 'views', 'likes', 'comments', 'shares', 'saves', 'reach', 'engagementRate', 'postId', 'createdAt'];
+
 /**
  * Helper to compute engagement & engagement rate
  */
@@ -31,9 +33,10 @@ export const getPosts = async (req, res) => {
   try {
     const query = { userId: req.user._id };
 
-    // Search query across category, platform, or postId
+    // Search query across category, platform, or postId (escaped so input like "(" is literal)
     if (req.query.search) {
-      const regex = new RegExp(req.query.search, 'i');
+      const escaped = String(req.query.search).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const regex = new RegExp(escaped, 'i');
       query.$or = [{ category: regex }, { platform: regex }, { postId: regex }];
     }
 
@@ -55,9 +58,11 @@ export const getPosts = async (req, res) => {
     // Sorting
     let sort = { date: -1, createdAt: -1 };
     if (req.query.sort) {
-      const sortField = req.query.sort.replace('-', '');
-      const sortOrder = req.query.sort.startsWith('-') ? -1 : 1;
-      sort = { [sortField]: sortOrder };
+      const sortField = String(req.query.sort).replace('-', '');
+      const sortOrder = String(req.query.sort).startsWith('-') ? -1 : 1;
+      if (SORTABLE_FIELDS.includes(sortField)) {
+        sort = { [sortField]: sortOrder };
+      }
     }
 
     const posts = await Post.find(query).sort(sort);
@@ -323,6 +328,24 @@ export const updatePost = async (req, res) => {
   } catch (error) {
     console.error('updatePost error:', error);
     res.status(500).json({ error: error.message || 'Server error updating post' });
+  }
+};
+
+/**
+ * @desc    Delete ALL posts for the authenticated user (Settings → Delete Data)
+ * @route   DELETE /api/posts
+ * @access  Private
+ */
+export const deleteAllPosts = async (req, res) => {
+  try {
+    if (req.query.confirm !== 'DELETE') {
+      return res.status(400).json({ error: 'Confirmation required: pass confirm=DELETE' });
+    }
+    const result = await Post.deleteMany({ userId: req.user._id });
+    res.status(200).json({ success: true, deletedCount: result.deletedCount });
+  } catch (error) {
+    console.error('deleteAllPosts error:', error);
+    res.status(500).json({ error: 'Server error deleting posts' });
   }
 };
 

@@ -84,8 +84,8 @@ export default function DashboardPage() {
           <h1 className="font-headline text-headline-lg text-on-surface">{greeting()}, {userName}</h1>
           <p className="font-body text-body-md text-text-secondary mt-1">Loading your dashboard…</p>
         </div>
-        <section className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-          {[1, 2, 3, 4].map((i) => (
+        <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+          {[1, 2, 3, 4, 5].map((i) => (
             <div key={i} className="bg-surface border border-outline-variant rounded-lg p-5 kpi-depth animate-pulse">
               <div className="h-3 bg-surface-elevated rounded w-24 mb-4" />
               <div className="h-8 bg-surface-elevated rounded w-20" />
@@ -197,7 +197,7 @@ export default function DashboardPage() {
       </div>
 
       {/* 4 Primary KPI Cards */}
-      <section aria-label="Key Performance Indicators" className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 items-stretch">
+      <section aria-label="Key Performance Indicators" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 items-stretch">
         {kpiCards.map((kpi, idx) => (
           <article
             key={idx}
@@ -207,12 +207,11 @@ export default function DashboardPage() {
               <h2 className="font-label text-label-md uppercase tracking-wider text-text-secondary">{kpi.label}</h2>
               <span className="material-symbols-outlined text-[18px] text-text-secondary">{kpi.icon}</span>
             </header>
-            <div className="flex items-center justify-between gap-2">
+            <div className="flex flex-col gap-1">
               <p className="font-kpi text-kpi-lg-mobile md:text-kpi-lg text-on-surface tabular-nums">{kpi.value}</p>
-              <span className="inline-flex items-center gap-1 font-mono text-mono-sm text-success tabular-nums">
-                <span className="material-symbols-outlined text-[14px]">trending_up</span>
-                {kpi.delta}
-              </span>
+              {kpi.caption && (
+                <span className="font-mono text-mono-sm text-text-muted tabular-nums">{kpi.caption}</span>
+              )}
             </div>
           </article>
         ))}
@@ -350,7 +349,7 @@ export default function DashboardPage() {
           <div className="flex items-center justify-between">
             <div>
               <h2 className="font-title text-headline-md text-on-surface">Top Performing Posts</h2>
-              <p className="font-body text-body-sm text-text-secondary">Ranked by views and engagement efficiency</p>
+              <p className="font-body text-body-sm text-text-secondary">Ranked by views · tier from performance score</p>
             </div>
             <Link to="/posts" className="font-label text-label-md text-primary hover:underline">View all posts</Link>
           </div>

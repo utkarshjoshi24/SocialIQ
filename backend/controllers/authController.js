@@ -94,6 +94,45 @@ export const login = async (req, res) => {
 };
 
 /**
+ * @desc    Update current user's name and/or email
+ * @route   PUT /api/auth/me
+ * @access  Private
+ */
+export const updateMe = async (req, res) => {
+  try {
+    const { name, email } = req.body;
+
+    if (name !== undefined && !String(name).trim()) {
+      return res.status(400).json({ error: 'Name cannot be empty' });
+    }
+    if (email !== undefined) {
+      const normalized = String(email).trim().toLowerCase();
+      if (!normalized) {
+        return res.status(400).json({ error: 'Email cannot be empty' });
+      }
+      const taken = await User.findOne({ email: normalized, _id: { $ne: req.user._id } });
+      if (taken) {
+        return res.status(400).json({ error: 'That email is already used by another account' });
+      }
+    }
+
+    const user = await User.findById(req.user._id);
+    if (name !== undefined) user.name = String(name).trim();
+    if (email !== undefined) user.email = String(email).trim().toLowerCase();
+    await user.save(); // runs schema validation (email format, name length)
+
+    res.status(200).json({ success: true, user });
+  } catch (error) {
+    if (error.name === 'ValidationError') {
+      const message = Object.values(error.errors)[0]?.message || 'Invalid profile data';
+      return res.status(400).json({ error: message });
+    }
+    console.error('UpdateMe error:', error);
+    res.status(500).json({ error: 'Server error updating profile' });
+  }
+};
+
+/**
  * @desc    Get current logged in user
  * @route   GET /api/auth/me
  * @access  Private

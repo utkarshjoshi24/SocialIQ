@@ -5,6 +5,7 @@ import {
   createPost,
   updatePost,
   deletePost,
+  deleteAllPosts,
 } from '../controllers/postController.js';
 import { protect } from '../middleware/auth.js';
 
@@ -15,7 +16,8 @@ router.use(protect);
 
 router.route('/')
   .get(getPosts)
-  .post(createPost);
+  .post(createPost)
+  .delete(deleteAllPosts);
 
 router.route('/:id')
   .get(getPostById)
