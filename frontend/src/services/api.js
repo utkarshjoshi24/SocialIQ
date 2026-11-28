@@ -122,6 +122,18 @@ export const analyticsService = {
   },
 };
 
+// ML Prediction Services (Node proxies to the Flask ML service)
+export const predictionService = {
+  predict: async (features) => {
+    const res = await fetch(`${API_BASE}/prediction`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(features),
+    });
+    return handleResponse(res);
+  },
+};
+
 // CSV Upload Services
 export const uploadService = {
   uploadCSV: async (file) => {
