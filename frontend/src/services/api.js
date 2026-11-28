@@ -120,6 +120,13 @@ export const analyticsService = {
     });
     return handleResponse(res);
   },
+
+  getInsights: async () => {
+    const res = await fetch(`${API_BASE}/analytics/insights`, {
+      headers: getAuthHeaders(),
+    });
+    return handleResponse(res);
+  },
 };
 
 // ML Prediction Services (Node proxies to the Flask ML service)
