@@ -127,6 +127,17 @@ export const analyticsService = {
     });
     return handleResponse(res);
   },
+
+  compare: async ({ type, a, b } = {}) => {
+    const query = new URLSearchParams();
+    if (type) query.append('type', type);
+    if (a) query.append('a', a);
+    if (b) query.append('b', b);
+    const res = await fetch(`${API_BASE}/analytics/compare?${query.toString()}`, {
+      headers: getAuthHeaders(),
+    });
+    return handleResponse(res);
+  },
 };
 
 // ML Prediction Services (Node proxies to the Flask ML service)

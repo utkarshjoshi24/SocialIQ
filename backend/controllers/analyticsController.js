@@ -82,6 +82,102 @@ export const getInsights = async (req, res) => {
   }
 };
 
+const compareScript = path.resolve(rootDir, 'analytics/compare.py');
+
+// Comparison type -> Post field (date is handled as calendar months)
+const COMPARE_FIELDS = {
+  platform: 'platform',
+  contentType: 'contentType',
+  category: 'category',
+};
+const MONTH_PATTERN = /^\d{4}-(0[1-9]|1[0-2])$/;
+const MONTH_NAMES = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+
+const monthKey = (date) => {
+  const d = new Date(date);
+  return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}`;
+};
+
+const monthLabel = (key) => {
+  const [year, month] = key.split('-').map(Number);
+  return `${MONTH_NAMES[month - 1]} ${year}`;
+};
+
+/**
+ * Selector options with post counts, built from the user's own posts
+ */
+const buildCompareOptions = (posts) => {
+  const count = (getKey) => {
+    const counts = new Map();
+    for (const p of posts) {
+      const key = getKey(p);
+      if (key) counts.set(key, (counts.get(key) || 0) + 1);
+    }
+    return counts;
+  };
+  const toList = (counts, label = (v) => v) =>
+    Array.from(counts, ([value, postCount]) => ({ value, label: label(value), posts: postCount }));
+
+  const months = toList(count((p) => (p.date ? monthKey(p.date) : null)), monthLabel)
+    .sort((x, y) => y.value.localeCompare(x.value)); // newest first
+  const byCount = (list) => list.sort((x, y) => y.posts - x.posts || x.value.localeCompare(y.value));
+
+  return {
+    date: months,
+    platform: byCount(toList(count((p) => p.platform))),
+    contentType: byCount(toList(count((p) => p.contentType))),
+    category: byCount(toList(count((p) => p.category))),
+  };
+};
+
+const segmentPosts = (posts, type, value) => {
+  if (type === 'date') return posts.filter((p) => p.date && monthKey(p.date) === value);
+  return posts.filter((p) => p[COMPARE_FIELDS[type]] === value);
+};
+
+/**
+ * Compare two segments of the authenticated user's posts
+ * GET /api/analytics/compare?type=date|platform|contentType|category&a=...&b=...
+ * Without a/b, returns only the selector options.
+ */
+export const getCompare = async (req, res) => {
+  try {
+    const { type = 'date', a, b } = req.query;
+
+    if (type !== 'date' && !COMPARE_FIELDS[type]) {
+      return res.status(400).json({ error: 'type must be one of: date, platform, contentType, category' });
+    }
+
+    const posts = await Post.find({ userId: req.user.id }).sort({ date: 1 }).lean();
+    const options = buildCompareOptions(posts);
+
+    if (!a && !b) {
+      return res.json({ type, options, comparison: null });
+    }
+    if (!a || !b) {
+      return res.status(400).json({ error: 'Select both segment A and segment B' });
+    }
+    if (type === 'date' && (!MONTH_PATTERN.test(a) || !MONTH_PATTERN.test(b))) {
+      return res.status(400).json({ error: 'Date segments must be months in YYYY-MM format' });
+    }
+    if (a === b) {
+      return res.status(400).json({ error: 'Choose two different segments to compare' });
+    }
+
+    const label = (value) => (type === 'date' ? monthLabel(value) : value);
+    const comparison = await runPythonJson(compareScript, {
+      a: { label: label(a), posts: toAnalyticsRecords(segmentPosts(posts, type, a)) },
+      b: { label: label(b), posts: toAnalyticsRecords(segmentPosts(posts, type, b)) },
+      benchmark: toAnalyticsRecords(posts),
+    });
+
+    return res.json({ type, options, comparison });
+  } catch (err) {
+    console.error('[Compare Error]', err);
+    return res.status(500).json({ error: 'Failed to compare segments' });
+  }
+};
+
 /**
  * Controller to fetch and calculate real-time social media analytics
  * GET /api/analytics
